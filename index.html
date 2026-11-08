@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>माझे बजेट</title>
   
-  <!-- Inline PWA Manifest -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%232563eb'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='central' text-anchor='middle' font-family='sans-serif' font-size='240' font-weight='bold' fill='white'%3E%E2%82%B9%3C/text%3E%3C/svg%3E">
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E0%A4%AE%E0%A4%BE%E0%A4%9D%E0%A5%87%20%E0%A4%AC%E0%A4%9C%E0%A5%87%E0%A4%9F%22%2C%22short_name%22%3A%22%E0%A4%AC%E0%A4%9C%E0%A5%87%E0%A4%9F%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f1f5f9%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 70px; user-select: none; }
@@ -40,7 +36,7 @@
 </head>
 <body>
 
-  <!-- Offline-safe Login Modal -->
+  <!-- Login Modal -->
   <div id="loginModal" style="display: none;">
     <div class="card" style="width: 100%; max-width: 360px; text-align: center; padding: 22px;">
       <div style="font-size: 36px; margin-bottom: 8px;">👤</div>
@@ -166,22 +162,6 @@
   </main>
 
   <script>
-    // १. ऑफलाइन सर्व्हिस वर्कर कॅशिंग (नेट बंद असतानाही उघडण्यासाठी)
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE = 'budget-offline-v1';
-        self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
-        self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
-        self.addEventListener('fetch', e => {
-          if (e.request.method === 'GET' && !e.request.url.includes('script.google.com')) {
-            e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
-          }
-        });
-      `;
-      const swBlob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-    }
-
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkKzsCZ1XQzc5-Bf-aKNaKlss9r-jzn1WqiyMjKZ_qF1d4TJmFWK_Z9UuqHpAihb8S/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
@@ -301,7 +281,6 @@
         notes: note
       };
 
-      // ऑफलाइन असो वा ऑनलाइन, प्रथम फोनमध्ये नोंद सेव्ह होणारच
       transactions.unshift(record);
       pendingQueue.push(record);
       saveUserLocalData();
