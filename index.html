@@ -162,8 +162,8 @@
   </main>
 
   <script>
-    // **टीप: खालील लिंक तुम्ही नवीन डिप्लॉय केल्यानंतर मिळालेली Web App URL असू द्यावी**
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkKzsCZ1XQzc5-Bf-aKNaKlss9r-jzn1WqiyMjKZ_qF1d4TJmFWK_Z9UuqHpAihb8S/exec";
+    // तुमची नवीन Apps Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0cwKeSY4RIAu1EU7I4SgUTQu3ZQmvMM-5syrpZw8ZiyKFuQp2rWDJ-T4h_jKyW9_t/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
     const incomeCategories = ["पगार (Salary)", "व्यवसाय (Business)", "भाडे", "व्याज", "इतर जमा"];
@@ -186,9 +186,8 @@
         document.getElementById('displayUserId').innerText = currentUserId;
         loadUserLocalData();
         renderTransactions();
-        
         if (navigator.onLine) {
-          fetchDataFromSheet(); // शीटवरून जुना डेटा आणणे
+          fetchDataFromSheet();
         } else {
           setSyncBadge('offline');
         }
@@ -207,7 +206,6 @@
       document.getElementById('displayUserId').innerText = currentUserId;
       loadUserLocalData();
       renderTransactions();
-      
       if (navigator.onLine) {
         fetchDataFromSheet();
       }
@@ -317,7 +315,7 @@
       }
     }
 
-    // १. गुगल शीटवरून डेटा डाऊनलोड करणे (दुसऱ्या डिव्हाइसवर दिसण्यासाठी)
+    // १. शीटमधून जुना डेटा ॲपमध्ये आणणे
     async function fetchDataFromSheet() {
       if (!currentUserId || !navigator.onLine) return;
       setSyncBadge('syncing');
@@ -327,15 +325,11 @@
         const json = await res.json();
         
         if (json.status === "success" && json.data) {
-          // शीटवरील डेटा आणि पेंडिंग लोकल डेटा मर्ज करणे
           const existingMap = new Map();
           json.data.forEach(item => existingMap.set(item.id, item));
-          
-          // पेंडिंग नोंदी चालू ठेवणे
           pendingQueue.forEach(item => existingMap.set(item.id, item));
 
           transactions = Array.from(existingMap.values());
-          // तारखेनुसार उतरत्या क्रमाने लावणे
           transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
           saveUserLocalData();
@@ -344,11 +338,11 @@
       } catch (err) {
         console.error("Fetch Error:", err);
       } finally {
-        triggerSync(); // पेंडिंग डेटा शीटवर पाठवणे
+        triggerSync();
       }
     }
 
-    // २. डेटा गुगल शीटवर अपलोड करणे
+    // २. डेटा गुगल शीटवर सेव्ह करणे
     async function triggerSync() {
       if (isSyncing || !currentUserId || !navigator.onLine) return;
       if (pendingQueue.length === 0 && deleteQueue.length === 0) {
@@ -363,22 +357,17 @@
         // डिलीट नोंदी शीटवर सिंक करणे
         while (deleteQueue.length > 0) {
           const id = deleteQueue[0];
-          await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ action: 'delete', id: id })
-          });
+          await fetch(`${SCRIPT_URL}?action=delete&id=${encodeURIComponent(id)}`);
           deleteQueue.shift();
           saveUserLocalData();
         }
 
         // नवीन नोंदी शीटवर सिंक करणे
         if (pendingQueue.length > 0) {
-          await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ action: 'sync', records: pendingQueue, user_id: currentUserId })
-          });
+          const payload = encodeURIComponent(JSON.stringify(pendingQueue));
+          const url = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserId)}&data=${payload}`;
+          
+          await fetch(url);
           pendingQueue = [];
           saveUserLocalData();
         }
