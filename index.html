@@ -162,8 +162,8 @@
   </main>
 
   <script>
-    // तुमची नवीन Apps Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0cwKeSY4RIAu1EU7I4SgUTQu3ZQmvMM-5syrpZw8ZiyKFuQp2rWDJ-T4h_jKyW9_t/exec";
+    // तुमची नवीन Apps Script URL जोडली आहे
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQ7D57rmAajnRGubdz7ZbnnyI7Baw-pJVsHBVx3pvvBdhziXpWGEoP9SBdaskU7NDl/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
     const incomeCategories = ["पगार (Salary)", "व्यवसाय (Business)", "भाडे", "व्याज", "इतर जमा"];
@@ -315,7 +315,7 @@
       }
     }
 
-    // १. शीटमधून जुना डेटा ॲपमध्ये आणणे
+    // १. शीटमधून डेटा ॲपमध्ये आणणे
     async function fetchDataFromSheet() {
       if (!currentUserId || !navigator.onLine) return;
       setSyncBadge('syncing');
@@ -357,7 +357,10 @@
         // डिलीट नोंदी शीटवर सिंक करणे
         while (deleteQueue.length > 0) {
           const id = deleteQueue[0];
-          await fetch(`${SCRIPT_URL}?action=delete&id=${encodeURIComponent(id)}`);
+          await fetch(`${SCRIPT_URL}?action=delete&id=${encodeURIComponent(id)}`, {
+            method: 'GET',
+            mode: 'no-cors'
+          });
           deleteQueue.shift();
           saveUserLocalData();
         }
@@ -365,9 +368,13 @@
         // नवीन नोंदी शीटवर सिंक करणे
         if (pendingQueue.length > 0) {
           const payload = encodeURIComponent(JSON.stringify(pendingQueue));
-          const url = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserId)}&data=${payload}`;
+          const syncUrl = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserId)}&data=${payload}`;
           
-          await fetch(url);
+          await fetch(syncUrl, {
+            method: 'GET',
+            mode: 'no-cors'
+          });
+          
           pendingQueue = [];
           saveUserLocalData();
         }
