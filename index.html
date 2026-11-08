@@ -21,9 +21,9 @@
       <input type="tel" id="userPhoneInput" placeholder="मोबाईल नंबर (उदा. 9876543210)" maxlength="10" 
              class="w-full border border-slate-300 rounded-xl px-4 py-3 text-center text-base font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500">
       <button type="button" onclick="performLogin()" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition">
-        ॲप सुरू करा / डेटा मिळवा
+        ॲप सुरू करा
       </button>
-      <p id="loginStatus" class="text-xs text-blue-600 font-medium hidden">डेटा क्लाउडवरून लोड होत आहे...</p>
+      <p id="loginStatus" class="text-xs text-blue-600 font-medium hidden">तपासत आहे...</p>
     </div>
   </div>
 
@@ -51,7 +51,7 @@
     <!-- User Status -->
     <div class="flex justify-between items-center px-1 text-xs text-slate-500">
       <span>वापरकर्ता: <strong id="displayUserId" class="text-slate-700">-</strong></span>
-      <span class="text-[11px] text-blue-600 cursor-pointer font-semibold" onclick="fetchCloudData()">🔄 रीफ्रेश डेटा</span>
+      <span class="text-[11px] text-blue-600 cursor-pointer font-semibold" onclick="manualSync()">🔄 मॅन्युअल सिंक</span>
     </div>
 
     <!-- Summary Cards -->
@@ -179,6 +179,8 @@
     let currentUserId = localStorage.getItem('budget_user_id') || '';
     let transactions = [];
     let pendingQueue = [];
+    let deleteQueue = [];
+    let isSyncing = false;
 
     const todayStr = new Date().toISOString().slice(0, 10);
     try {
@@ -193,7 +195,11 @@
         document.getElementById('displayUserId').innerText = currentUserId;
         loadUserLocalData();
         renderTransactions();
-        fetchCloudData();
+        if (navigator.onLine) {
+          triggerSync();
+        } else {
+          updateStatusIndicator('offline');
+        }
       }
     }
 
@@ -207,10 +213,14 @@
       currentUserId = phone;
       localStorage.setItem('budget_user_id', currentUserId);
       document.getElementById('loginStatus').classList.remove('hidden');
-
-      await fetchCloudData();
+      loadUserLocalData();
       document.getElementById('loginModal').classList.add('hidden');
       document.getElementById('displayUserId').innerText = currentUserId;
+      renderTransactions();
+
+      if (navigator.onLine) {
+        await fetchCloudData();
+      }
     }
 
     function logoutUser() {
@@ -223,9 +233,11 @@
       try {
         transactions = JSON.parse(localStorage.getItem('budget_data_' + currentUserId) || '[]');
         pendingQueue = JSON.parse(localStorage.getItem('budget_pending_' + currentUserId) || '[]');
+        deleteQueue = JSON.parse(localStorage.getItem('budget_delete_' + currentUserId) || '[]');
       } catch (e) {
         transactions = [];
         pendingQueue = [];
+        deleteQueue = [];
       }
     }
 
@@ -233,28 +245,19 @@
       try {
         localStorage.setItem('budget_data_' + currentUserId, JSON.stringify(transactions));
         localStorage.setItem('budget_pending_' + currentUserId, JSON.stringify(pendingQueue));
+        localStorage.setItem('budget_delete_' + currentUserId, JSON.stringify(deleteQueue));
       } catch (e) {}
     }
 
-    // क्लाउडवरून डेटा आणण्यासाठी सुधारित पद्धत (GET)
-    async function fetchCloudData() {
-      if (!navigator.onLine || !currentUserId) return;
+    function updateStatusIndicator(status) {
       const statusEl = document.getElementById('syncStatus');
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डेटा लोड होत आहे...`;
-
-      try {
-        const fetchUrl = `${SCRIPT_URL}?action=fetch_user_data&user_id=${encodeURIComponent(currentUserId)}`;
-        const res = await fetch(fetchUrl);
-        const data = await res.json();
-        
-        if (data.status === 'success' && data.records) {
-          transactions = data.records.reverse();
-          saveUserLocalData();
-          renderTransactions();
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सिंक झाला`;
-        }
-      } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू`;
+      if (status === 'syncing') {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> बॅकअप होत आहे...`;
+      } else if (status === 'online') {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सिंक झाला`;
+      } else if (status === 'offline') {
+        const pendingCount = pendingQueue.length + deleteQueue.length;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> ऑफलाइन (${pendingCount} पेंडिंग)`;
       }
     }
 
@@ -296,6 +299,7 @@
         notes: note
       };
 
+      // ऑफलाइन असो वा ऑनलाइन, प्रथम फोनमध्ये नोंद सेव्ह करणे
       transactions.unshift(record);
       pendingQueue.push(record);
       saveUserLocalData();
@@ -304,31 +308,107 @@
       e.target.reset();
       document.getElementById('transDate').value = todayStr;
       updateCategories();
-      triggerSync();
+
+      if (navigator.onLine) {
+        triggerSync();
+      } else {
+        updateStatusIndicator('offline');
+      }
     }
 
-    async function deleteTransaction(id) {
+    function deleteTransaction(id) {
       if (!confirm("ही नोंद नक्की डिलीट करायची आहे का?")) return;
 
       transactions = transactions.filter(t => t.id !== id);
       pendingQueue = pendingQueue.filter(t => t.id !== id);
+      deleteQueue.push(id);
       saveUserLocalData();
       renderTransactions();
 
-      const statusEl = document.getElementById('syncStatus');
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डिलीट होत आहे...`;
+      if (navigator.onLine) {
+        triggerSync();
+      } else {
+        updateStatusIndicator('offline');
+      }
+    }
+
+    // ऑटोमॅटिक बॅकअप आणि सिंक इंजिन
+    async function triggerSync() {
+      if (isSyncing || !currentUserId || !navigator.onLine) return;
+      if (pendingQueue.length === 0 && deleteQueue.length === 0) {
+        updateStatusIndicator('online');
+        return;
+      }
+
+      isSyncing = true;
+      updateStatusIndicator('syncing');
 
       try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'delete', id: id })
-        });
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> नोंद डिलीट झाली`;
+        // १. पेंडिंग डिलीट ऑपरेशन्स पाठवणे
+        while (deleteQueue.length > 0) {
+          const idToDelete = deleteQueue[0];
+          await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'delete', id: idToDelete })
+          });
+          deleteQueue.shift();
+          saveUserLocalData();
+        }
+
+        // २. पेंडिंग नवीन नोंदी पाठवणे
+        if (pendingQueue.length > 0) {
+          await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'sync', records: pendingQueue, user_id: currentUserId })
+          });
+          pendingQueue = [];
+          saveUserLocalData();
+        }
+
+        updateStatusIndicator('online');
       } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> सिंक एरर`;
+        updateStatusIndicator('offline');
+      } finally {
+        isSyncing = false;
       }
+    }
+
+    async function fetchCloudData() {
+      if (!navigator.onLine || !currentUserId) return;
+      updateStatusIndicator('syncing');
+
+      try {
+        const fetchUrl = `${SCRIPT_URL}?action=fetch_user_data&user_id=${encodeURIComponent(currentUserId)}`;
+        const res = await fetch(fetchUrl);
+        const data = await res.json();
+        
+        if (data.status === 'success' && data.records) {
+          // सर्व्हरचा डेटा आणि फोनमधील पेंडिंग डेटा एकत्र करणे
+          const cloudRecords = data.records.reverse();
+          const pendingIds = new Set(pendingQueue.map(p => p.id));
+          const deletedIds = new Set(deleteQueue);
+
+          const validCloud = cloudRecords.filter(c => !deletedIds.has(c.id) && !pendingIds.has(c.id));
+          transactions = [...pendingQueue, ...validCloud];
+          saveUserLocalData();
+          renderTransactions();
+          updateStatusIndicator('online');
+        }
+      } catch (err) {
+        updateStatusIndicator('offline');
+      }
+    }
+
+    function manualSync() {
+      if (!navigator.onLine) {
+        alert("इंटरनेट बंद आहे! कृपया डेटा चालू करा.");
+        return;
+      }
+      triggerSync().then(() => fetchCloudData());
     }
 
     function renderTransactions() {
@@ -399,26 +479,6 @@
       }).join('');
     }
 
-    async function triggerSync() {
-      if (!navigator.onLine || pendingQueue.length === 0 || !currentUserId) return;
-      const statusEl = document.getElementById('syncStatus');
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> अपलोड होत आहे...`;
-
-      try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'sync', records: pendingQueue, user_id: currentUserId })
-        });
-        pendingQueue = [];
-        saveUserLocalData();
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सेव्ह झाला`;
-      } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू`;
-      }
-    }
-
     function downloadCSVReport() {
       if (transactions.length === 0) {
         alert("नोंद उपलब्ध नाही!");
@@ -436,7 +496,15 @@
       a.click();
     }
 
-    window.addEventListener('online', triggerSync);
+    // इंटरनेट पुन्हा सुरू होताच ऑटोमॅटिक सिंक सुरू करणे
+    window.addEventListener('online', () => {
+      triggerSync();
+    });
+
+    window.addEventListener('offline', () => {
+      updateStatusIndicator('offline');
+    });
+
     updateCategories();
     checkLogin();
   </script>
