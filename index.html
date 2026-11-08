@@ -25,37 +25,32 @@
     
     <!-- Summary Cards -->
     <div class="grid grid-cols-2 gap-3">
-      <!-- Balance Card -->
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
         <p class="text-xs text-slate-500 font-medium">हातची शिल्लक (Balance)</p>
         <p id="totalBalance" class="text-xl font-black text-blue-600 mt-1">₹0</p>
       </div>
 
-      <!-- Total Investment/Savings Card -->
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
         <p class="text-xs text-slate-500 font-medium">एकूण गुंतवणूक (Savings)</p>
         <p id="totalSavings" class="text-xl font-black text-indigo-600 mt-1">₹0</p>
       </div>
 
-      <!-- Income Card -->
       <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
         <p class="text-xs text-slate-500 font-medium">निवडलेली जमा</p>
         <p id="totalIncome" class="text-base font-bold text-emerald-600 mt-0.5">₹0</p>
       </div>
 
-      <!-- Expense Card -->
       <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
         <p class="text-xs text-slate-500 font-medium">निवडलेला खर्च</p>
         <p id="totalExpense" class="text-base font-bold text-rose-600 mt-0.5">₹0</p>
       </div>
     </div>
 
-    <!-- Search & Date Range Filters -->
+    <!-- Search & Date Filters -->
     <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (Mutual Fund, किराणा, 500)..." 
+      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (Mutual Fund, किराणा)..." 
              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
       
-      <!-- Date Range (From - To) -->
       <div>
         <p class="text-[11px] font-semibold text-slate-500 mb-1">तारीख निवडा (Date Range):</p>
         <div class="grid grid-cols-2 gap-2">
@@ -85,8 +80,6 @@
 
     <!-- Entry Form -->
     <form id="entryForm" onsubmit="handleFormSubmit(event)" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      
-      <!-- 3-Way Choice: Expense, Income, Saving -->
       <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg">
         <label class="text-center cursor-pointer">
           <input type="radio" name="transType" value="expense" checked class="peer sr-only" onchange="updateCategories()">
@@ -108,7 +101,7 @@
           <input type="number" id="amount" required placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">वर्गवारी (Category)</label>
+          <label class="block text-xs text-slate-500 mb-1">वर्गवारी</label>
           <select id="category" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
         </div>
       </div>
@@ -129,8 +122,8 @@
       </div>
 
       <div>
-        <label class="block text-xs text-slate-500 mb-1">तपशील / टीप (Note)</label>
-        <input type="text" id="note" placeholder="उदा. HDFC SIP, SBI FD, किराणा माल..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="block text-xs text-slate-500 mb-1">तपशील / टीप</label>
+        <input type="text" id="note" placeholder="उदा. किराणा, SIP..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
 
       <button type="submit" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition">
@@ -224,13 +217,40 @@
       triggerSync();
     }
 
+    // नोंद डिलीट करण्याचे फंक्शन
+    async function deleteTransaction(id) {
+      if (!confirm("ही नोंद नक्की डिलीट करायची आहे का?")) return;
+
+      // १. स्थानिक मेमरीमधून हटवणे
+      transactions = transactions.filter(t => t.id !== id);
+      pendingQueue = pendingQueue.filter(t => t.id !== id);
+      setStoredData('budget_data', transactions);
+      setStoredData('budget_pending', pendingQueue);
+      renderTransactions();
+
+      // २. गुगल शीटवरून हटवणे
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डिलीट होत आहे...`;
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'delete', id: id })
+        });
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> नोंद डिलीट झाली`;
+      } catch (err) {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> सिंक एरर`;
+      }
+    }
+
     function renderTransactions() {
       const search = (document.getElementById('searchInput').value || '').toLowerCase();
       const typeFilter = document.getElementById('typeFilter').value;
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
-      // १. एकूण शिल्लक (हातची शिल्लक = जमा - खर्च - केलेली बचत)
       let lifetimeIncome = 0;
       let lifetimeExpense = 0;
       let lifetimeSaving = 0;
@@ -246,7 +266,6 @@
       balEl.innerText = `₹${netBalance.toLocaleString('en-IN')}`;
       balEl.className = `text-xl font-black mt-1 ${netBalance >= 0 ? 'text-blue-600' : 'text-rose-600'}`;
 
-      // २. तारीख आणि सर्चनुसार फिल्टर केलेल्या नोंदी
       const filtered = transactions.filter(t => {
         const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
         const matchType = typeFilter === 'all' || t.type === typeFilter;
@@ -258,7 +277,6 @@
         return matchSearch && matchType && matchDate;
       });
 
-      // ३. निवडलेल्या फिल्टरनुसार आकडेवारी
       let rangeIncome = 0;
       let rangeExpense = 0;
       let rangeSaving = 0;
@@ -273,7 +291,6 @@
       document.getElementById('totalExpense').innerText = `₹${rangeExpense.toLocaleString('en-IN')}`;
       document.getElementById('totalSavings').innerText = `₹${rangeSaving.toLocaleString('en-IN')}`;
 
-      // ४. नोंदींची यादी तयार करणे
       const container = document.getElementById('txList');
       if (filtered.length === 0) {
         container.innerHTML = `<div class="bg-white p-5 text-center text-xs text-slate-400 rounded-xl">कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
@@ -297,14 +314,17 @@
 
         return `
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-            <div>
+            <div class="flex-1 pr-2">
               <p class="font-bold text-sm text-slate-800">${t.notes}</p>
               <p class="text-[11px] text-slate-400 mt-0.5">${t.date} • <span class="bg-slate-100 px-1 py-0.5 rounded text-slate-600">${t.mode}</span> • <span class="font-semibold text-slate-600">${typeBadge}</span> • ${t.category}</p>
             </div>
-            <div class="text-right">
+            <div class="flex items-center gap-2">
               <span class="text-sm font-bold ${badgeColor}">
                 ${sign} ₹${t.amount.toLocaleString('en-IN')}
               </span>
+              <button type="button" onclick="deleteTransaction('${t.id}')" title="डिलीट करा" class="text-slate-400 hover:text-rose-500 p-1.5 rounded-lg active:bg-rose-50 text-sm">
+                🗑️
+              </button>
             </div>
           </div>
         `;
