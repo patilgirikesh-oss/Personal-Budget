@@ -4,223 +4,228 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>माझे बजेट</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 pb-20 select-none">
+  
+  <!-- Inline PWA Manifest -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%232563eb'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='central' text-anchor='middle' font-family='sans-serif' font-size='240' font-weight='bold' fill='white'%3E%E2%82%B9%3C/text%3E%3C/svg%3E">
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E0%A4%AE%E0%A4%BE%E0%A4%9D%E0%A5%87%20%E0%A4%AC%E0%A4%9C%E0%A5%87%E0%A4%9F%22%2C%22short_name%22%3A%22%E0%A4%AC%E0%A4%9C%E0%A5%87%E0%A4%9F%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f1f5f9%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
 
-  <!-- Login Modal -->
-  <div id="loginModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
-      <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto">
-        👤
-      </div>
-      <div>
-        <h2 class="text-lg font-bold text-slate-800">बजेट ॲप लॉगिन</h2>
-        <p class="text-xs text-slate-500 mt-1">फोन हरवला तरी तुमचा डेटा सुरक्षित राहण्यासाठी तुमचा १० अंकी मोबाईल नंबर टाका.</p>
-      </div>
-      <input type="tel" id="userPhoneInput" placeholder="मोबाईल नंबर (उदा. 9876543210)" maxlength="10" 
-             class="w-full border border-slate-300 rounded-xl px-4 py-3 text-center text-base font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <button type="button" onclick="performLogin()" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition">
-        ॲप सुरू करा
-      </button>
-      <p id="loginStatus" class="text-xs text-blue-600 font-medium hidden">तपासत आहे...</p>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 70px; user-select: none; }
+    header { background-color: #2563eb; color: #ffffff; padding: 14px 16px; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .main-wrap { max-width: 480px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .val-text { font-size: 19px; font-weight: 900; margin-top: 4px; }
+    .lbl-text { font-size: 11px; color: #64748b; font-weight: 600; }
+    .form-group { margin-bottom: 10px; }
+    input, select { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; outline: none; }
+    input:focus, select:focus { border-color: #2563eb; }
+    .type-btn { padding: 8px 4px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; }
+    .type-btn.active-exp { background: #ef4444; color: #fff; border-color: #ef4444; }
+    .type-btn.active-inc { background: #10b981; color: #fff; border-color: #10b981; }
+    .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
+    .btn-submit:active { transform: scale(0.98); }
+    .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
+    .tx-notes { font-size: 14px; font-weight: bold; color: #0f172a; }
+    .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
+    .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
+    .tx-del:hover { color: #ef4444; }
+    #loginModal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Offline-safe Login Modal -->
+  <div id="loginModal" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 360px; text-align: center; padding: 22px;">
+      <div style="font-size: 36px; margin-bottom: 8px;">👤</div>
+      <h2 style="font-size: 17px; font-weight: bold; margin-bottom: 6px;">बजेट ॲप</h2>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">मोबाईल हरवला तरी डेटा सुरक्षित राहण्यासाठी तुमचा नंबर प्रविष्ट करा.</p>
+      <input type="tel" id="userPhoneInput" placeholder="१० अंकी नंबर" maxlength="10" style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 12px;">
+      <button type="button" onclick="performLogin()" class="btn-submit">ॲप सुरू करा</button>
     </div>
   </div>
 
   <!-- Header -->
-  <header class="bg-blue-600 text-white p-4 sticky top-0 z-20 shadow flex justify-between items-center">
+  <header>
     <div>
-      <h1 class="text-lg font-bold flex items-center gap-1.5">
-        <span>💰</span> माझे बजेट
-      </h1>
-      <p id="syncStatus" class="text-xs text-blue-100 flex items-center gap-1.5 mt-0.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू
+      <h1 style="font-size: 16px; font-weight: bold;">💰 माझे बजेट</h1>
+      <p id="syncStatus" style="font-size: 11px; margin-top: 2px;">
+        <span class="badge-dot" style="background: #10b981;"></span> सिंक चालू
       </p>
     </div>
-    <div class="flex items-center gap-2">
-      <button type="button" onclick="downloadCSVReport()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-blue-400">
-        📥 रिपोर्ट
-      </button>
-      <button type="button" onclick="logoutUser()" title="लॉगआउट" class="bg-blue-800 hover:bg-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-blue-400">
-        🚪
-      </button>
+    <div style="display: flex; gap: 6px;">
+      <button type="button" onclick="downloadCSVReport()" class="btn-hdr">📥 रिपोर्ट</button>
+      <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;">🚪</button>
     </div>
   </header>
 
-  <main class="max-w-md mx-auto p-4 space-y-4">
+  <main class="main-wrap">
     <!-- User Status -->
-    <div class="flex justify-between items-center px-1 text-xs text-slate-500">
-      <span>वापरकर्ता: <strong id="displayUserId" class="text-slate-700">-</strong></span>
-      <span class="text-[11px] text-blue-600 cursor-pointer font-semibold" onclick="manualSync()">🔄 मॅन्युअल सिंक</span>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; padding: 0 4px;">
+      <span>युझर: <strong id="displayUserId" style="color: #0f172a;">-</strong></span>
+      <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 डेटा सिंक करा</span>
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-xs text-slate-500 font-medium">हातची शिल्लक (Balance)</p>
-        <p id="totalBalance" class="text-xl font-black text-blue-600 mt-1">₹0</p>
+    <div class="grid-2">
+      <div class="card">
+        <p class="lbl-text">हातची शिल्लक (Balance)</p>
+        <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
       </div>
-
-      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-xs text-slate-500 font-medium">एकूण गुंतवणूक (Savings)</p>
-        <p id="totalSavings" class="text-xl font-black text-indigo-600 mt-1">₹0</p>
+      <div class="card">
+        <p class="lbl-text">एकूण गुंतवणूक (Savings)</p>
+        <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
       </div>
-
-      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-xs text-slate-500 font-medium">निवडलेली जमा</p>
-        <p id="totalIncome" class="text-base font-bold text-emerald-600 mt-0.5">₹0</p>
+      <div class="card">
+        <p class="lbl-text">निवडलेली जमा</p>
+        <p id="totalIncome" class="val-text" style="color: #10b981; font-size: 16px;">₹0</p>
       </div>
-
-      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-xs text-slate-500 font-medium">निवडलेला खर्च</p>
-        <p id="totalExpense" class="text-base font-bold text-rose-600 mt-0.5">₹0</p>
+      <div class="card">
+        <p class="lbl-text">निवडलेला खर्च</p>
+        <p id="totalExpense" class="val-text" style="color: #ef4444; font-size: 16px;">₹0</p>
       </div>
     </div>
 
-    <!-- Search & Date Range Filters -->
-    <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (Mutual Fund, किराणा)..." 
-             class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      
-      <div>
-        <p class="text-[11px] font-semibold text-slate-500 mb-1">तारीख निवडा (Date Range):</p>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] text-slate-400">या तारखेपासून (From)</label>
-            <input type="date" id="startDate" onchange="renderTransactions()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-[10px] text-slate-400">या तारखेपर्यंत (To)</label>
-            <input type="date" id="endDate" onchange="renderTransactions()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:outline-none">
-          </div>
+    <!-- Filters -->
+    <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, SIP)...">
+      <div class="grid-2">
+        <div>
+          <span style="font-size: 10px; color: #64748b;">या तारखेपासून (From)</span>
+          <input type="date" id="startDate" onchange="renderTransactions()">
+        </div>
+        <div>
+          <span style="font-size: 10px; color: #64748b;">या तारखेपर्यंत (To)</span>
+          <input type="date" id="endDate" onchange="renderTransactions()">
         </div>
       </div>
-
-      <div class="flex gap-2 items-center">
-        <select id="typeFilter" onchange="renderTransactions()" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:outline-none">
+      <div style="display: flex; gap: 6px;">
+        <select id="typeFilter" onchange="renderTransactions()" style="flex: 1;">
           <option value="all">सर्व नोंदी</option>
           <option value="expense">केवळ खर्च</option>
           <option value="income">केवळ जमा</option>
-          <option value="saving">केवळ गुंतवणूक/बचत</option>
+          <option value="saving">केवळ गुंतवणूक</option>
         </select>
-        <button type="button" onclick="clearDateFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium">
-          रिसेट
-        </button>
+        <button type="button" onclick="clearFilters()" class="btn-hdr" style="background: #e2e8f0; color: #334155; border: none;">रिसेट</button>
       </div>
     </div>
 
-    <!-- Entry Form -->
-    <form id="entryForm" onsubmit="handleFormSubmit(event)" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg">
-        <label class="text-center cursor-pointer">
-          <input type="radio" name="transType" value="expense" checked class="peer sr-only" onchange="updateCategories()">
-          <span class="block py-1.5 text-xs font-bold rounded-md peer-checked:bg-rose-500 peer-checked:text-white text-slate-600 transition">खर्च</span>
-        </label>
-        <label class="text-center cursor-pointer">
-          <input type="radio" name="transType" value="income" class="peer sr-only" onchange="updateCategories()">
-          <span class="block py-1.5 text-xs font-bold rounded-md peer-checked:bg-emerald-500 peer-checked:text-white text-slate-600 transition">जमा</span>
-        </label>
-        <label class="text-center cursor-pointer">
-          <input type="radio" name="transType" value="saving" class="peer sr-only" onchange="updateCategories()">
-          <span class="block py-1.5 text-xs font-bold rounded-md peer-checked:bg-indigo-600 peer-checked:text-white text-slate-600 transition">गुंतवणूक</span>
-        </label>
+    <!-- Form -->
+    <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
+      <div class="grid-3" style="margin-bottom: 12px;">
+        <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
+        <div id="btnTypeInc" class="type-btn" onclick="setType('income')">जमा</div>
+        <div id="btnTypeSav" class="type-btn" onclick="setType('saving')">गुंतवणूक</div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid-2 form-group">
         <div>
-          <label class="block text-xs text-slate-500 mb-1">रक्कम (₹)</label>
-          <input type="number" id="amount" required placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="lbl-text">रक्कम (₹)</label>
+          <input type="number" id="amount" required placeholder="0" style="font-weight: bold; font-size: 16px;">
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">वर्गवारी</label>
-          <select id="category" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+          <label class="lbl-text">वर्गवारी</label>
+          <select id="category"></select>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid-2 form-group">
         <div>
-          <label class="block text-xs text-slate-500 mb-1">माध्यम</label>
-          <select id="mode" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+          <label class="lbl-text">माध्यम</label>
+          <select id="mode">
             <option value="UPI">UPI / GPay</option>
             <option value="Bank">बँक खात्यातून</option>
             <option value="Cash">रोख (Cash)</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs text-slate-500 mb-1">तारीख</label>
-          <input type="date" id="transDate" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+          <label class="lbl-text">तारीख</label>
+          <input type="date" id="transDate" required>
         </div>
       </div>
 
-      <div>
-        <label class="block text-xs text-slate-500 mb-1">तपशील / टीप</label>
-        <input type="text" id="note" placeholder="उदा. किराणा, SIP, पगार..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="form-group">
+        <label class="lbl-text">तपशील / टीप</label>
+        <input type="text" id="note" placeholder="उदा. किराणा, पेट्रोल...">
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition">
-        नोंद सेव्ह करा
-      </button>
+      <button type="submit" class="btn-submit">नोंद सेव्ह करा</button>
     </form>
 
     <!-- History -->
-    <div class="space-y-2">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">नोंदींचा इतिहास</h2>
-      <div id="txList" class="space-y-2"></div>
+    <div>
+      <h2 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">इतिहास</h2>
+      <div id="txList"></div>
     </div>
   </main>
 
   <script>
+    // १. ऑफलाइन सर्व्हिस वर्कर कॅशिंग (नेट बंद असतानाही उघडण्यासाठी)
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE = 'budget-offline-v1';
+        self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
+        self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+        self.addEventListener('fetch', e => {
+          if (e.request.method === 'GET' && !e.request.url.includes('script.google.com')) {
+            e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+          }
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+    }
+
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkKzsCZ1XQzc5-Bf-aKNaKlss9r-jzn1WqiyMjKZ_qF1d4TJmFWK_Z9UuqHpAihb8S/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
     const incomeCategories = ["पगार (Salary)", "व्यवसाय (Business)", "भाडे", "व्याज", "इतर जमा"];
     const savingCategories = ["Mutual Fund / SIP", "शेअर्स (Stocks)", "FD / RD", "सोने (Gold)", "PPF / PF", "विमा (Insurance/LIC)", "इतर बचत"];
 
+    let selectedType = 'expense';
     let currentUserId = localStorage.getItem('budget_user_id') || '';
     let transactions = [];
     let pendingQueue = [];
     let deleteQueue = [];
     let isSyncing = false;
 
-    const todayStr = new Date().toISOString().slice(0, 10);
-    try {
-      document.getElementById('transDate').value = todayStr;
-    } catch (e) {}
+    document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
 
     function checkLogin() {
       if (!currentUserId) {
-        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('loginModal').style.display = 'flex';
       } else {
-        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('loginModal').style.display = 'none';
         document.getElementById('displayUserId').innerText = currentUserId;
         loadUserLocalData();
         renderTransactions();
         if (navigator.onLine) {
           triggerSync();
         } else {
-          updateStatusIndicator('offline');
+          setSyncBadge('offline');
         }
       }
     }
 
-    async function performLogin() {
+    function performLogin() {
       const phone = document.getElementById('userPhoneInput').value.trim();
       if (!phone || phone.length < 4) {
-        alert("कृपया वैध मोबाईल नंबर टाका!");
+        alert("कृपया वैध नंबर टाका!");
         return;
       }
-
       currentUserId = phone;
       localStorage.setItem('budget_user_id', currentUserId);
-      document.getElementById('loginStatus').classList.remove('hidden');
-      loadUserLocalData();
-      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').style.display = 'none';
       document.getElementById('displayUserId').innerText = currentUserId;
+      loadUserLocalData();
       renderTransactions();
-
-      if (navigator.onLine) {
-        await fetchCloudData();
-      }
+      if (navigator.onLine) triggerSync();
     }
 
     function logoutUser() {
@@ -235,9 +240,7 @@
         pendingQueue = JSON.parse(localStorage.getItem('budget_pending_' + currentUserId) || '[]');
         deleteQueue = JSON.parse(localStorage.getItem('budget_delete_' + currentUserId) || '[]');
       } catch (e) {
-        transactions = [];
-        pendingQueue = [];
-        deleteQueue = [];
+        transactions = []; pendingQueue = []; deleteQueue = [];
       }
     }
 
@@ -249,30 +252,30 @@
       } catch (e) {}
     }
 
-    function updateStatusIndicator(status) {
-      const statusEl = document.getElementById('syncStatus');
-      if (status === 'syncing') {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> बॅकअप होत आहे...`;
-      } else if (status === 'online') {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सिंक झाला`;
-      } else if (status === 'offline') {
-        const pendingCount = pendingQueue.length + deleteQueue.length;
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> ऑफलाइन (${pendingCount} पेंडिंग)`;
+    function setSyncBadge(state) {
+      const el = document.getElementById('syncStatus');
+      if (state === 'syncing') {
+        el.innerHTML = `<span class="badge-dot" style="background:#fbbf24;"></span> अपलोड होत आहे...`;
+      } else if (state === 'online') {
+        el.innerHTML = `<span class="badge-dot" style="background:#10b981;"></span> सर्व डेटा सिंक झाला`;
+      } else if (state === 'offline') {
+        const count = pendingQueue.length + deleteQueue.length;
+        el.innerHTML = `<span class="badge-dot" style="background:#f59e0b;"></span> ऑफलाइन (${count} पेंडिंग)`;
       }
     }
 
-    function updateCategories() {
-      const type = document.querySelector('input[name="transType"]:checked').value;
+    function setType(type) {
+      selectedType = type;
+      document.getElementById('btnTypeExp').className = 'type-btn' + (type === 'expense' ? ' active-exp' : '');
+      document.getElementById('btnTypeInc').className = 'type-btn' + (type === 'income' ? ' active-inc' : '');
+      document.getElementById('btnTypeSav').className = 'type-btn' + (type === 'saving' ? ' active-sav' : '');
+      
       const catSelect = document.getElementById('category');
-      let cats = [];
-      if (type === 'expense') cats = expenseCategories;
-      else if (type === 'income') cats = incomeCategories;
-      else if (type === 'saving') cats = savingCategories;
-
+      let cats = type === 'expense' ? expenseCategories : (type === 'income' ? incomeCategories : savingCategories);
       catSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    function clearDateFilter() {
+    function clearFilters() {
       document.getElementById('startDate').value = '';
       document.getElementById('endDate').value = '';
       document.getElementById('typeFilter').value = 'all';
@@ -282,7 +285,6 @@
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      const type = document.querySelector('input[name="transType"]:checked').value;
       const amount = parseFloat(document.getElementById('amount').value);
       const category = document.getElementById('category').value;
       const mode = document.getElementById('mode').value;
@@ -292,33 +294,32 @@
       const record = {
         id: "TX_" + Date.now(),
         date: date,
-        type: type,
+        type: selectedType,
         category: category,
         amount: amount,
         mode: mode,
         notes: note
       };
 
-      // ऑफलाइन असो वा ऑनलाइन, प्रथम फोनमध्ये नोंद सेव्ह करणे
+      // ऑफलाइन असो वा ऑनलाइन, प्रथम फोनमध्ये नोंद सेव्ह होणारच
       transactions.unshift(record);
       pendingQueue.push(record);
       saveUserLocalData();
 
       renderTransactions();
       e.target.reset();
-      document.getElementById('transDate').value = todayStr;
-      updateCategories();
+      document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
+      setType(selectedType);
 
       if (navigator.onLine) {
         triggerSync();
       } else {
-        updateStatusIndicator('offline');
+        setSyncBadge('offline');
       }
     }
 
     function deleteTransaction(id) {
-      if (!confirm("ही नोंद नक्की डिलीट करायची आहे का?")) return;
-
+      if (!confirm("ही नोंद नक्की हटवायची आहे का?")) return;
       transactions = transactions.filter(t => t.id !== id);
       pendingQueue = pendingQueue.filter(t => t.id !== id);
       deleteQueue.push(id);
@@ -328,36 +329,33 @@
       if (navigator.onLine) {
         triggerSync();
       } else {
-        updateStatusIndicator('offline');
+        setSyncBadge('offline');
       }
     }
 
-    // ऑटोमॅटिक बॅकअप आणि सिंक इंजिन
     async function triggerSync() {
       if (isSyncing || !currentUserId || !navigator.onLine) return;
       if (pendingQueue.length === 0 && deleteQueue.length === 0) {
-        updateStatusIndicator('online');
+        setSyncBadge('online');
         return;
       }
 
       isSyncing = true;
-      updateStatusIndicator('syncing');
+      setSyncBadge('syncing');
 
       try {
-        // १. पेंडिंग डिलीट ऑपरेशन्स पाठवणे
         while (deleteQueue.length > 0) {
-          const idToDelete = deleteQueue[0];
+          const id = deleteQueue[0];
           await fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'delete', id: idToDelete })
+            body: JSON.stringify({ action: 'delete', id: id })
           });
           deleteQueue.shift();
           saveUserLocalData();
         }
 
-        // २. पेंडिंग नवीन नोंदी पाठवणे
         if (pendingQueue.length > 0) {
           await fetch(SCRIPT_URL, {
             method: 'POST',
@@ -369,46 +367,20 @@
           saveUserLocalData();
         }
 
-        updateStatusIndicator('online');
+        setSyncBadge('online');
       } catch (err) {
-        updateStatusIndicator('offline');
+        setSyncBadge('offline');
       } finally {
         isSyncing = false;
       }
     }
 
-    async function fetchCloudData() {
-      if (!navigator.onLine || !currentUserId) return;
-      updateStatusIndicator('syncing');
-
-      try {
-        const fetchUrl = `${SCRIPT_URL}?action=fetch_user_data&user_id=${encodeURIComponent(currentUserId)}`;
-        const res = await fetch(fetchUrl);
-        const data = await res.json();
-        
-        if (data.status === 'success' && data.records) {
-          // सर्व्हरचा डेटा आणि फोनमधील पेंडिंग डेटा एकत्र करणे
-          const cloudRecords = data.records.reverse();
-          const pendingIds = new Set(pendingQueue.map(p => p.id));
-          const deletedIds = new Set(deleteQueue);
-
-          const validCloud = cloudRecords.filter(c => !deletedIds.has(c.id) && !pendingIds.has(c.id));
-          transactions = [...pendingQueue, ...validCloud];
-          saveUserLocalData();
-          renderTransactions();
-          updateStatusIndicator('online');
-        }
-      } catch (err) {
-        updateStatusIndicator('offline');
-      }
-    }
-
-    function manualSync() {
+    function triggerManualSync() {
       if (!navigator.onLine) {
-        alert("इंटरनेट बंद आहे! कृपया डेटा चालू करा.");
+        alert("इंटरनेट बंद आहे!");
         return;
       }
-      triggerSync().then(() => fetchCloudData());
+      triggerSync();
     }
 
     function renderTransactions() {
@@ -427,7 +399,7 @@
       const netBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
       const balEl = document.getElementById('totalBalance');
       balEl.innerText = `₹${netBalance.toLocaleString('en-IN')}`;
-      balEl.className = `text-xl font-black mt-1 ${netBalance >= 0 ? 'text-blue-600' : 'text-rose-600'}`;
+      balEl.style.color = netBalance >= 0 ? '#2563eb' : '#ef4444';
 
       const filtered = transactions.filter(t => {
         const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
@@ -451,28 +423,26 @@
 
       const container = document.getElementById('txList');
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="bg-white p-5 text-center text-xs text-slate-400 rounded-xl">कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
+        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
         return;
       }
 
       container.innerHTML = filtered.map(t => {
-        let badgeColor = 'text-rose-600', sign = '-', typeBadge = 'खर्च';
-        if (t.type === 'income') { badgeColor = 'text-emerald-600'; sign = '+'; typeBadge = 'जमा'; }
-        else if (t.type === 'saving') { badgeColor = 'text-indigo-600'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
+        let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
+        if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
+        else if (t.type === 'saving') { badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
 
         return `
-          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-            <div class="flex-1 pr-2">
-              <p class="font-bold text-sm text-slate-800">${t.notes}</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">${t.date} • <span class="bg-slate-100 px-1 py-0.5 rounded text-slate-600">${t.mode}</span> • <span class="font-semibold text-slate-600">${typeBadge}</span> • ${t.category}</p>
+          <div class="tx-item">
+            <div>
+              <p class="tx-notes">${t.notes}</p>
+              <p class="tx-sub">${t.date} • ${t.mode} • <strong>${typeBadge}</strong> • ${t.category}</p>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-bold ${badgeColor}">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 14px; font-weight: bold; color: ${badgeColor};">
                 ${sign} ₹${t.amount.toLocaleString('en-IN')}
               </span>
-              <button type="button" onclick="deleteTransaction('${t.id}')" title="डिलीट करा" class="text-slate-400 hover:text-rose-500 p-1.5 rounded-lg active:bg-rose-50 text-sm">
-                🗑️
-              </button>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
             </div>
           </div>
         `;
@@ -480,32 +450,22 @@
     }
 
     function downloadCSVReport() {
-      if (transactions.length === 0) {
-        alert("नोंद उपलब्ध नाही!");
-        return;
-      }
+      if (transactions.length === 0) { alert("नोंद उपलब्ध नाही!"); return; }
       let csv = "ID,Tariqh,Prakar,Vargawari,Rakkam,Madhyam,Tip\n";
       transactions.forEach(t => {
         csv += `"${t.id}","${t.date}","${t.type}","${t.category}","${t.amount}","${t.mode}","${t.notes.replace(/"/g, '""')}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = URL.createObjectURL(blob);
       a.download = `Budget_Report_${currentUserId}.csv`;
       a.click();
     }
 
-    // इंटरनेट पुन्हा सुरू होताच ऑटोमॅटिक सिंक सुरू करणे
-    window.addEventListener('online', () => {
-      triggerSync();
-    });
+    window.addEventListener('online', triggerSync);
+    window.addEventListener('offline', () => setSyncBadge('offline'));
 
-    window.addEventListener('offline', () => {
-      updateStatusIndicator('offline');
-    });
-
-    updateCategories();
+    setType('expense');
     checkLogin();
   </script>
 </body>
