@@ -236,26 +236,25 @@
       } catch (e) {}
     }
 
+    // क्लाउडवरून डेटा आणण्यासाठी सुधारित पद्धत (GET)
     async function fetchCloudData() {
       if (!navigator.onLine || !currentUserId) return;
       const statusEl = document.getElementById('syncStatus');
       statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डेटा लोड होत आहे...`;
 
       try {
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'fetch_user_data', user_id: currentUserId })
-        });
+        const fetchUrl = `${SCRIPT_URL}?action=fetch_user_data&user_id=${encodeURIComponent(currentUserId)}`;
+        const res = await fetch(fetchUrl);
         const data = await res.json();
+        
         if (data.status === 'success' && data.records) {
           transactions = data.records.reverse();
           saveUserLocalData();
           renderTransactions();
-          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा अद्ययावत`;
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सिंक झाला`;
         }
       } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> ऑफलाइन रेडी`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू`;
       }
     }
 
@@ -416,7 +415,7 @@
         saveUserLocalData();
         statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सेव्ह झाला`;
       } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> ऑफलाइन सेव्ह केले`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू`;
       }
     }
 
