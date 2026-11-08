@@ -8,21 +8,52 @@
 </head>
 <body class="bg-slate-100 text-slate-800 pb-20 select-none">
 
+  <!-- Login Modal (जर लॉगिन नसेल तरच दिसेल) -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+      <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto">
+        👤
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">बजेट ॲप लॉगिन</h2>
+        <p class="text-xs text-slate-500 mt-1">फोन हरवला तरी तुमचा डेटा सुरक्षित राहण्यासाठी तुमचा १० अंकी मोबाईल नंबर टाका.</p>
+      </div>
+      <input type="tel" id="userPhoneInput" placeholder="मोबाईल नंबर (उदा. 9876543210)" maxlength="10" 
+             class="w-full border border-slate-300 rounded-xl px-4 py-3 text-center text-base font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button type="button" onclick="performLogin()" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition">
+        ॲप सुरू करा / डेटा मिळवा
+      </button>
+      <p id="loginStatus" class="text-xs text-blue-600 font-medium hidden">डेटा क्लाउडवरून लोड होत आहे...</p>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="bg-blue-600 text-white p-4 sticky top-0 z-20 shadow flex justify-between items-center">
     <div>
-      <h1 class="text-lg font-bold">💰 माझे बजेट</h1>
+      <h1 class="text-lg font-bold flex items-center gap-1.5">
+        <span>💰</span> माझे बजेट
+      </h1>
       <p id="syncStatus" class="text-xs text-blue-100 flex items-center gap-1.5 mt-0.5">
         <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सिंक चालू
       </p>
     </div>
-    <button type="button" onclick="downloadCSVReport()" class="bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-400">
-      📥 रिपोर्ट
-    </button>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="downloadCSVReport()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-blue-400">
+        📥 रिपोर्ट
+      </button>
+      <button type="button" onclick="logoutUser()" title="लॉगआउट" class="bg-blue-800 hover:bg-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-blue-400">
+        🚪
+      </button>
+    </div>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-4">
-    
+    <!-- User Badge -->
+    <div class="flex justify-between items-center px-1 text-xs text-slate-500">
+      <span>वापरकर्ता: <strong id="displayUserId" class="text-slate-700">-</strong></span>
+      <span class="text-[11px] text-blue-600 cursor-pointer" onclick="fetchCloudData()">🔄 रीफ्रेश डेटा</span>
+    </div>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-2 gap-3">
       <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200">
@@ -91,7 +122,7 @@
         </label>
         <label class="text-center cursor-pointer">
           <input type="radio" name="transType" value="saving" class="peer sr-only" onchange="updateCategories()">
-          <span class="block py-1.5 text-xs font-bold rounded-md peer-checked:bg-indigo-600 peer-checked:text-white text-slate-600 transition">गुंतवणूक/बचत</span>
+          <span class="block py-1.5 text-xs font-bold rounded-md peer-checked:bg-indigo-600 peer-checked:text-white text-slate-600 transition">गुंतवणूक</span>
         </label>
       </div>
 
@@ -123,7 +154,7 @@
 
       <div>
         <label class="block text-xs text-slate-500 mb-1">तपशील / टीप</label>
-        <input type="text" id="note" placeholder="उदा. किराणा, SIP..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="note" placeholder="उदा. किराणा, SIP, पगार..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
 
       <button type="submit" class="w-full bg-blue-600 active:scale-95 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition">
@@ -145,27 +176,90 @@
     const incomeCategories = ["पगार (Salary)", "व्यवसाय (Business)", "भाडे", "व्याज", "इतर जमा"];
     const savingCategories = ["Mutual Fund / SIP", "शेअर्स (Stocks)", "FD / RD", "सोने (Gold)", "PPF / PF", "विमा (Insurance/LIC)", "इतर बचत"];
 
-    function getStoredData(key) {
-      try {
-        return JSON.parse(localStorage.getItem(key) || '[]');
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function setStoredData(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (e) {}
-    }
-
-    let transactions = getStoredData('budget_data');
-    let pendingQueue = getStoredData('budget_pending');
+    let currentUserId = localStorage.getItem('budget_user_id') || '';
+    let transactions = [];
+    let pendingQueue = [];
 
     const todayStr = new Date().toISOString().slice(0, 10);
     try {
       document.getElementById('transDate').value = todayStr;
     } catch (e) {}
+
+    // लॉगिन चेकिंग
+    function checkLogin() {
+      if (!currentUserId) {
+        document.getElementById('loginModal').classList.remove('hidden');
+      } else {
+        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('displayUserId').innerText = currentUserId;
+        loadUserLocalData();
+        renderTransactions();
+        fetchCloudData();
+      }
+    }
+
+    async function performLogin() {
+      const phone = document.getElementById('userPhoneInput').value.trim();
+      if (!phone || phone.length < 4) {
+        alert("कृपया वैध मोबाईल नंबर टाका!");
+        return;
+      }
+
+      currentUserId = phone;
+      localStorage.setItem('budget_user_id', currentUserId);
+      document.getElementById('loginStatus').classList.remove('hidden');
+
+      await fetchCloudData();
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('displayUserId').innerText = currentUserId;
+    }
+
+    function logoutUser() {
+      if (!confirm("लॉगआउट करायचे आहे का?")) return;
+      localStorage.removeItem('budget_user_id');
+      location.reload();
+    }
+
+    function loadUserLocalData() {
+      try {
+        transactions = JSON.parse(localStorage.getItem('budget_data_' + currentUserId) || '[]');
+        pendingQueue = JSON.parse(localStorage.getItem('budget_pending_' + currentUserId) || '[]');
+      } catch (e) {
+        transactions = [];
+        pendingQueue = [];
+      }
+    }
+
+    function saveUserLocalData() {
+      try {
+        localStorage.setItem('budget_data_' + currentUserId, JSON.stringify(transactions));
+        localStorage.setItem('budget_pending_' + currentUserId, JSON.stringify(pendingQueue));
+      } catch (e) {}
+    }
+
+    // क्लाउडवरून युझरचा डेटा डाऊनलोड करणे
+    async function fetchCloudData() {
+      if (!navigator.onLine || !currentUserId) return;
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डेटा लोड होत आहे...`;
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'fetch_user_data', user_id: currentUserId })
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.records) {
+          transactions = data.records.reverse();
+          saveUserLocalData();
+          renderTransactions();
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा अद्ययावत`;
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> ऑफलाइन रेडी`;
+      }
+    }
 
     function updateCategories() {
       const type = document.querySelector('input[name="transType"]:checked').value;
@@ -207,8 +301,7 @@
 
       transactions.unshift(record);
       pendingQueue.push(record);
-      setStoredData('budget_data', transactions);
-      setStoredData('budget_pending', pendingQueue);
+      saveUserLocalData();
 
       renderTransactions();
       e.target.reset();
@@ -217,20 +310,13 @@
       triggerSync();
     }
 
-    // नोंद डिलीट करण्याचे फंक्शन
     async function deleteTransaction(id) {
       if (!confirm("ही नोंद नक्की डिलीट करायची आहे का?")) return;
 
-      // १. स्थानिक मेमरीमधून हटवणे
       transactions = transactions.filter(t => t.id !== id);
       pendingQueue = pendingQueue.filter(t => t.id !== id);
-      setStoredData('budget_data', transactions);
-      setStoredData('budget_pending', pendingQueue);
+      saveUserLocalData();
       renderTransactions();
-
-      // २. गुगल शीटवरून हटवणे
-      const statusEl = document.getElementById('syncStatus');
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> डिलीट होत आहे...`;
 
       try {
         await fetch(SCRIPT_URL, {
@@ -239,10 +325,7 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'delete', id: id })
         });
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> नोंद डिलीट झाली`;
-      } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> सिंक एरर`;
-      }
+      } catch (err) {}
     }
 
     function renderTransactions() {
@@ -251,10 +334,7 @@
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
-      let lifetimeIncome = 0;
-      let lifetimeExpense = 0;
-      let lifetimeSaving = 0;
-
+      let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0;
       transactions.forEach(t => {
         if (t.type === 'income') lifetimeIncome += t.amount;
         else if (t.type === 'expense') lifetimeExpense += t.amount;
@@ -269,18 +349,13 @@
       const filtered = transactions.filter(t => {
         const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
         const matchType = typeFilter === 'all' || t.type === typeFilter;
-        
         let matchDate = true;
         if (startDate && t.date < startDate) matchDate = false;
         if (endDate && t.date > endDate) matchDate = false;
-
         return matchSearch && matchType && matchDate;
       });
 
-      let rangeIncome = 0;
-      let rangeExpense = 0;
-      let rangeSaving = 0;
-
+      let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0;
       filtered.forEach(t => {
         if (t.type === 'income') rangeIncome += t.amount;
         else if (t.type === 'expense') rangeExpense += t.amount;
@@ -298,19 +373,9 @@
       }
 
       container.innerHTML = filtered.map(t => {
-        let badgeColor = 'text-rose-600';
-        let sign = '-';
-        let typeBadge = 'खर्च';
-
-        if (t.type === 'income') {
-          badgeColor = 'text-emerald-600';
-          sign = '+';
-          typeBadge = 'जमा';
-        } else if (t.type === 'saving') {
-          badgeColor = 'text-indigo-600';
-          sign = '💼 ';
-          typeBadge = 'बचत/गुंतवणूक';
-        }
+        let badgeColor = 'text-rose-600', sign = '-', typeBadge = 'खर्च';
+        if (t.type === 'income') { badgeColor = 'text-emerald-600'; sign = '+'; typeBadge = 'जमा'; }
+        else if (t.type === 'saving') { badgeColor = 'text-indigo-600'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
 
         return `
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
@@ -332,8 +397,7 @@
     }
 
     async function triggerSync() {
-      if (!navigator.onLine || pendingQueue.length === 0) return;
-      
+      if (!navigator.onLine || pendingQueue.length === 0 || !currentUserId) return;
       const statusEl = document.getElementById('syncStatus');
       statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span> अपलोड होत आहे...`;
 
@@ -342,13 +406,13 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'sync', records: pendingQueue })
+          body: JSON.stringify({ action: 'sync', records: pendingQueue, user_id: currentUserId })
         });
         pendingQueue = [];
-        setStoredData('budget_pending', []);
+        saveUserLocalData();
         statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> सर्व डेटा सेव्ह झाला`;
       } catch (err) {
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> ऑफलाइन (डेटा फोनमध्ये आहे)`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> ऑफलाइन सेव्ह केले`;
       }
     }
 
@@ -365,13 +429,13 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Budget_Report_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `Budget_Report_${currentUserId}.csv`;
       a.click();
     }
 
     window.addEventListener('online', triggerSync);
     updateCategories();
-    renderTransactions();
+    checkLogin();
   </script>
 </body>
 </html>
