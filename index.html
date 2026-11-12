@@ -93,7 +93,6 @@
         </div>
       </div>
 
-      <!-- नवीन Search बटण -->
       <button type="button" onclick="searchByDateRange()" class="btn-search-date">
         🔍 निवडलेल्या तारखा शोधा (Search)
       </button>
@@ -201,11 +200,18 @@
       return `${year}-${month}-${day}`;
     }
 
-    // तारीख नेहमी YYYY-MM-DD फॉरमॅटमध्ये घेण्यासाठी हेल्पर फंक्शन
-    function normalizeDate(dateStr) {
-      if (!dateStr) return '';
-      if (dateStr.includes('T')) return dateStr.split('T')[0];
-      return dateStr.trim();
+    // भारतीय वेळेनुसार (Local Timezone) तारीख अचूक YYYY-MM-DD फॉरमॅटमध्ये घेण्यासाठी
+    function normalizeDate(dateVal) {
+      if (!dateVal) return '';
+      const str = String(dateVal).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        return str;
+      }
+      const parsed = new Date(str);
+      if (!isNaN(parsed.getTime())) {
+        return getLocalDateString(parsed);
+      }
+      return str.split('T')[0];
     }
 
     document.getElementById('transDate').value = getLocalDateString(new Date());
@@ -219,7 +225,6 @@
       document.getElementById('endDate').value = getLocalDateString(lastDay);
     }
 
-    // From Date ते To Date सर्च बटण फंक्शन
     function searchByDateRange() {
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
@@ -409,7 +414,7 @@
           pendingQueue.forEach(item => existingMap.set(item.id, item));
 
           transactions = Array.from(existingMap.values());
-          transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+          transactions.sort((a, b) => normalizeDate(b.date).localeCompare(normalizeDate(a.date)));
 
           saveUserLocalData();
           renderTransactions();
@@ -481,6 +486,8 @@
       const historyTitle = document.getElementById('historyTitle');
       if (!startDate && !endDate) {
         historyTitle.innerText = "सर्व नोंदींचा इतिहास (All Time)";
+      } else if (startDate && endDate && startDate === endDate) {
+        historyTitle.innerText = `निवडलेल्या तारखेचा इतिहास (${startDate})`;
       } else {
         historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
       }
@@ -496,15 +503,16 @@
       const lifetimeNetBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
 
-      // 2. From Date ते To Date फिल्टर
+      // 2. From Date ते To Date (दोन्ही तारखा धरून) फिल्टर
       const dateFiltered = transactions.filter(t => {
         const txDate = normalizeDate(t.date);
+        if (!txDate) return false;
         if (startDate && txDate < startDate) return false;
         if (endDate && txDate > endDate) return false;
         return true;
       });
 
-      // 3. निवडलेल्या काळातील हिशोब कार्ड्स अपडेट करणे
+      // 3. निवडलेल्या तारखांचा हिशोब कार्ड्सवर दाखवणे
       let periodIncome = 0, periodExpense = 0, periodSaving = 0;
       dateFiltered.forEach(t => {
         const amt = Number(t.amount) || 0;
@@ -558,13 +566,13 @@
       }).join('');
     }
 
-    // CSV रिपोर्ट डाउनलोड (निवडलेल्या तारखांनुसार)
     function downloadCSVReport() {
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
       const filtered = transactions.filter(t => {
         const txDate = normalizeDate(t.date);
+        if (!txDate) return false;
         if (startDate && txDate < startDate) return false;
         if (endDate && txDate > endDate) return false;
         return true;
@@ -594,7 +602,6 @@
     window.addEventListener('online', () => { triggerSync(); });
     window.addEventListener('offline', () => { setSyncBadge('offline'); });
 
-    // ॲप सुरू करताना सेटअप
     setType('expense');
     setDefaultCurrentMonth();
     checkLogin();
