@@ -31,6 +31,13 @@
     .type-btn.active-exp { background: #ef4444; color: #fff; border-color: #ef4444; }
     .type-btn.active-inc { background: #10b981; color: #fff; border-color: #10b981; }
     .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    
+    /* गुंतवणूक उप-पर्याय (Invest / Withdraw) */
+    .sub-sav-box { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #eef2ff; padding: 6px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #c7d2fe; }
+    .sub-btn { padding: 7px 4px; border-radius: 7px; text-align: center; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+    .sub-btn.active-invest { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .sub-btn.active-withdraw { background: #d97706; color: #fff; border-color: #d97706; }
+
     .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn-submit:active { transform: scale(0.98); }
     .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
@@ -38,7 +45,7 @@
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
     .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
     .tx-del:hover { color: #ef4444; }
-    #authModal { position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    #authModal { position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
     .auth-tab { padding: 8px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #64748b; }
     .auth-tab.active { background: #fff; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
@@ -99,7 +106,7 @@
 
     <!-- १. सर्च आणि तारीख फिल्टर -->
     <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
-      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, SIP)...">
+      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (Search)">
       <div class="grid-2">
         <div>
           <span style="font-size: 10px; color: #64748b;">या तारखेपासून (From)</span>
@@ -115,7 +122,8 @@
           <option value="all">सर्व प्रकार</option>
           <option value="expense">केवळ खर्च</option>
           <option value="income">केवळ जमा</option>
-          <option value="saving">केवळ गुंतवणूक</option>
+          <option value="saving">केवळ गुंतवणूक (जमा)</option>
+          <option value="withdraw">गुंतवणूक काढली (Withdraw)</option>
         </select>
         <button type="button" onclick="showAllTime()" class="btn-hdr" style="background: #2563eb; color: #fff; border: none; padding: 9px 10px;">सर्व नोंदी</button>
         <button type="button" onclick="resetToCurrentMonth()" class="btn-hdr" style="background: #e2e8f0; color: #334155; border: none; padding: 9px 10px;">चालू महिना</button>
@@ -124,10 +132,16 @@
 
     <!-- २. खर्च, जमा, गुंतवणूक नोंद फॉर्म -->
     <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
-      <div class="grid-3" style="margin-bottom: 12px;">
+      <div class="grid-3" style="margin-bottom: 10px;">
         <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
         <div id="btnTypeInc" class="type-btn" onclick="setType('income')">जमा</div>
         <div id="btnTypeSav" class="type-btn" onclick="setType('saving')">गुंतवणूक</div>
+      </div>
+
+      <!-- फक्त 'गुंतवणूक' वर क्लिक केल्यावरच हा पर्याय दिसेल -->
+      <div id="savingActionBox" class="sub-sav-box" style="display: none;">
+        <div id="btnSubInvest" class="sub-btn active-invest" onclick="setSavingAction('saving')">➕ नवीन गुंतवणूक</div>
+        <div id="btnSubWithdraw" class="sub-btn" onclick="setSavingAction('withdraw')">↩️ गुंतवणूक काढली (Withdraw)</div>
       </div>
 
       <div class="grid-2 form-group">
@@ -161,19 +175,20 @@
         <input type="text" id="note" placeholder="उदा. किराणा, पेट्रोल...">
       </div>
 
-      <button type="submit" class="btn-submit">नोंद सेव्ह करा</button>
+      <button type="submit" id="btnSubmitForm" class="btn-submit">नोंद सेव्ह करा</button>
     </form>
 
     <!-- ३. हिशोब कार्ड्स -->
     <div class="grid-2">
       <div class="card">
-        <p class="lbl-text">शिल्लक (निवडलेला काळ)</p>
+        <p class="lbl-text">शिल्लक (Balance )</p>
         <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
         <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण शिल्लक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
       </div>
       <div class="card">
-        <p class="lbl-text">गुंतवणूक (निवडलेला काळ)</p>
+        <p class="lbl-text">निव्वळ गुंतवणूक (Savings)</p>
         <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
+        <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण गुंतवणूक: <strong id="lifetimeSavingsText" style="color: #0f172a;">₹0</strong></p>
       </div>
       <div class="card">
         <p class="lbl-text">कमाई (Income)</p>
@@ -238,7 +253,6 @@
       renderTransactions();
     }
 
-    // लॉगिन आणि रजिस्टर टॅब बदलणे
     function switchAuthTab(mode) {
       authMode = mode;
       document.getElementById('tabLogin').className = 'auth-tab' + (mode === 'login' ? ' active' : '');
@@ -366,7 +380,6 @@
       }, 600);
     }
 
-    // युझरच्या ईमेलवर थेट रिपोर्ट पाठवणे
     async function sendReportToEmail() {
       if (!navigator.onLine) {
         alert("ईमेल पाठवण्यासाठी इंटरनेट चालू असणे आवश्यक आहे!");
@@ -402,15 +415,52 @@
       }
     }
 
+    // मुख्य प्रकार निवडणे: खर्च, जमा किंवा गुंतवणूक
     function setType(type) {
-      selectedType = type;
+      const isSavGroup = (type === 'saving' || type === 'withdraw');
+      
       document.getElementById('btnTypeExp').className = 'type-btn' + (type === 'expense' ? ' active-exp' : '');
       document.getElementById('btnTypeInc').className = 'type-btn' + (type === 'income' ? ' active-inc' : '');
-      document.getElementById('btnTypeSav').className = 'type-btn' + (type === 'saving' ? ' active-sav' : '');
+      document.getElementById('btnTypeSav').className = 'type-btn' + (isSavGroup ? ' active-sav' : '');
       
+      const subBox = document.getElementById('savingActionBox');
       const catSelect = document.getElementById('category');
-      let cats = type === 'expense' ? expenseCategories : (type === 'income' ? incomeCategories : savingCategories);
-      catSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      const noteInput = document.getElementById('note');
+
+      if (isSavGroup) {
+        subBox.style.display = 'grid';
+        catSelect.innerHTML = savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+        setSavingAction(type === 'withdraw' ? 'withdraw' : 'saving');
+      } else {
+        subBox.style.display = 'none';
+        selectedType = type;
+        noteInput.placeholder = "उदा. किराणा, पेट्रोल...";
+        document.getElementById('btnSubmitForm').style.background = '#2563eb';
+        document.getElementById('btnSubmitForm').innerText = 'नोंद सेव्ह करा';
+        
+        let cats = (type === 'expense') ? expenseCategories : incomeCategories;
+        catSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+    }
+
+    // गुंतवणूक निवडल्यावर 'नवीन गुंतवणूक' किंवा 'काढली (Withdraw)' निवडणे
+    function setSavingAction(action) {
+      selectedType = action; // 'saving' किंवा 'withdraw'
+      document.getElementById('btnSubInvest').className = 'sub-btn' + (action === 'saving' ? ' active-invest' : '');
+      document.getElementById('btnSubWithdraw').className = 'sub-btn' + (action === 'withdraw' ? ' active-withdraw' : '');
+
+      const noteInput = document.getElementById('note');
+      const submitBtn = document.getElementById('btnSubmitForm');
+
+      if (action === 'withdraw') {
+        noteInput.placeholder = "उदा. SIP / FD मधून पैसे काढले...";
+        submitBtn.style.background = '#d97706';
+        submitBtn.innerText = 'गुंतवणूक काढल्याची नोंद करा';
+      } else {
+        noteInput.placeholder = "उदा. मासिक SIP, FD गुंतवणूक...";
+        submitBtn.style.background = '#4f46e5';
+        submitBtn.innerText = 'गुंतवणूक सेव्ह करा';
+      }
     }
 
     function handleFormSubmit(e) {
@@ -501,7 +551,7 @@
       try {
         while (deleteQueue.length > 0) {
           const id = deleteQueue[0];
-          await fetch(`${SCRIPT_URL}?action=delete&id=${encodeURIComponent(id)}`, {
+          await fetch(`${SCRIPT_URL}?action=delete&user_id=${encodeURIComponent(currentUserEmail)}&id=${encodeURIComponent(id)}`, {
             method: 'GET',
             mode: 'no-cors'
           });
@@ -552,14 +602,19 @@
         historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
       }
 
-      let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0;
+      let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0, lifetimeWithdraw = 0;
       transactions.forEach(t => {
         if (t.type === 'income') lifetimeIncome += t.amount;
         else if (t.type === 'expense') lifetimeExpense += t.amount;
         else if (t.type === 'saving') lifetimeSaving += t.amount;
+        else if (t.type === 'withdraw') lifetimeWithdraw += t.amount;
       });
-      const lifetimeNetBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
+      
+      const lifetimeNetBalance = (lifetimeIncome + lifetimeWithdraw) - (lifetimeExpense + lifetimeSaving);
+      const lifetimeNetSavings = lifetimeSaving - lifetimeWithdraw;
+
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
+      document.getElementById('lifetimeSavingsText').innerText = `₹${lifetimeNetSavings.toLocaleString('en-IN')}`;
 
       const dateFiltered = transactions.filter(t => {
         let matchDate = true;
@@ -568,21 +623,27 @@
         return matchDate;
       });
 
-      let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0;
+      let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0, rangeWithdraw = 0;
       dateFiltered.forEach(t => {
         if (t.type === 'income') rangeIncome += t.amount;
         else if (t.type === 'expense') rangeExpense += t.amount;
         else if (t.type === 'saving') rangeSaving += t.amount;
+        else if (t.type === 'withdraw') rangeWithdraw += t.amount;
       });
 
-      const rangeNetBalance = rangeIncome - (rangeExpense + rangeSaving);
+      const rangeNetBalance = (rangeIncome + rangeWithdraw) - (rangeExpense + rangeSaving);
+      const rangeNetSavings = rangeSaving - rangeWithdraw;
+
       const balEl = document.getElementById('totalBalance');
       balEl.innerText = `₹${rangeNetBalance.toLocaleString('en-IN')}`;
       balEl.style.color = rangeNetBalance >= 0 ? '#2563eb' : '#ef4444';
 
+      const savEl = document.getElementById('totalSavings');
+      savEl.innerText = `₹${rangeNetSavings.toLocaleString('en-IN')}`;
+      savEl.style.color = rangeNetSavings >= 0 ? '#4f46e5' : '#d97706';
+
       document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
       document.getElementById('totalExpense').innerText = `₹${rangeExpense.toLocaleString('en-IN')}`;
-      document.getElementById('totalSavings').innerText = `₹${rangeSaving.toLocaleString('en-IN')}`;
 
       const listFiltered = dateFiltered.filter(t => {
         const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
@@ -600,6 +661,7 @@
         let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
         if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
         else if (t.type === 'saving') { badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
+        else if (t.type === 'withdraw') { badgeColor = '#d97706'; sign = '↩️ +'; typeBadge = 'गुंतवणूक काढली'; }
 
         return `
           <div class="tx-item">
