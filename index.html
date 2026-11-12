@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>माझे बजेट</title>
   
-    <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#2563eb">
-  <meta name="mobile-web-app-capable" content="yes">
-
-
-    <!-- क्रोम बार घालवण्यासाठी आणि फुल-स्क्रीन ॲप बनवण्यासाठी -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#2563eb">
   <meta name="mobile-web-app-capable" content="yes">
@@ -23,6 +17,7 @@
     header { background-color: #2563eb; color: #ffffff; padding: 14px 16px; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
     .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
     .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-hdr:active { transform: scale(0.95); }
     .main-wrap { max-width: 480px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -68,6 +63,7 @@
       </p>
     </div>
     <div style="display: flex; gap: 6px;">
+      <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr">🔄 रिफ्रेश</button>
       <button type="button" onclick="downloadCSVReport()" class="btn-hdr">📥 रिपोर्ट</button>
       <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;">🚪</button>
     </div>
@@ -80,27 +76,7 @@
       <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 डेटा सिंक करा</span>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid-2">
-      <div class="card">
-        <p class="lbl-text">हातची शिल्लक (Balance)</p>
-        <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
-      </div>
-      <div class="card">
-        <p class="lbl-text">एकूण गुंतवणूक (Savings)</p>
-        <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
-      </div>
-      <div class="card">
-        <p class="lbl-text">कमाई (Income)</p>
-        <p id="totalIncome" class="val-text" style="color: #10b981; font-size: 16px;">₹0</p>
-      </div>
-      <div class="card">
-        <p class="lbl-text">झालेला खर्च (Expense)</p>
-        <p id="totalExpense" class="val-text" style="color: #ef4444; font-size: 16px;">₹0</p>
-      </div>
-    </div>
-
-    <!-- Filters -->
+    <!-- १. सर्च आणि तारीख फिल्टर (Filters - 1st) -->
     <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
       <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, SIP)...">
       <div class="grid-2">
@@ -113,18 +89,19 @@
           <input type="date" id="endDate" onchange="renderTransactions()">
         </div>
       </div>
-      <div style="display: flex; gap: 6px;">
+      <div style="display: flex; gap: 6px; align-items: center;">
         <select id="typeFilter" onchange="renderTransactions()" style="flex: 1;">
-          <option value="all">सर्व नोंदी</option>
+          <option value="all">सर्व प्रकार</option>
           <option value="expense">केवळ खर्च</option>
           <option value="income">केवळ जमा</option>
           <option value="saving">केवळ गुंतवणूक</option>
         </select>
-        <button type="button" onclick="clearFilters()" class="btn-hdr" style="background: #e2e8f0; color: #334155; border: none;">रिसेट</button>
+        <button type="button" onclick="showAllTime()" class="btn-hdr" style="background: #2563eb; color: #fff; border: none; padding: 9px 10px;">सर्व नोंदी</button>
+        <button type="button" onclick="resetToCurrentMonth()" class="btn-hdr" style="background: #e2e8f0; color: #334155; border: none; padding: 9px 10px;">चालू महिना</button>
       </div>
     </div>
 
-    <!-- Form -->
+    <!-- २. खर्च, जमा, गुंतवणूक नोंद फॉर्म (Entry Form - 2nd) -->
     <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
       <div class="grid-3" style="margin-bottom: 12px;">
         <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
@@ -166,15 +143,35 @@
       <button type="submit" class="btn-submit">नोंद सेव्ह करा</button>
     </form>
 
-    <!-- History -->
+    <!-- ३. हिशोब कार्ड्स (Summary Cards - 3rd) -->
+    <div class="grid-2">
+      <div class="card">
+        <p class="lbl-text">शिल्लक (निवडलेला काळ)</p>
+        <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
+        <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण शिल्लक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
+      </div>
+      <div class="card">
+        <p class="lbl-text">गुंतवणूक (निवडलेला काळ)</p>
+        <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
+      </div>
+      <div class="card">
+        <p class="lbl-text">कमाई (Income)</p>
+        <p id="totalIncome" class="val-text" style="color: #10b981; font-size: 16px;">₹0</p>
+      </div>
+      <div class="card">
+        <p class="lbl-text">झालेला खर्च (Expense)</p>
+        <p id="totalExpense" class="val-text" style="color: #ef4444; font-size: 16px;">₹0</p>
+      </div>
+    </div>
+
+    <!-- ४. इतिहास (History - 4th) -->
     <div>
-      <h2 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">इतिहास</h2>
+      <h2 id="historyTitle" style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">चालू महिन्याचा इतिहास</h2>
       <div id="txList"></div>
     </div>
   </main>
 
   <script>
-    // तुमची नवीन Apps Script URL जोडली आहे
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQ7D57rmAajnRGubdz7ZbnnyI7Baw-pJVsHBVx3pvvBdhziXpWGEoP9SBdaskU7NDl/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
@@ -188,7 +185,59 @@
     let deleteQueue = [];
     let isSyncing = false;
 
-    document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
+    function getLocalDateString(dateObj) {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    document.getElementById('transDate').value = getLocalDateString(new Date());
+
+    function setDefaultCurrentMonth() {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      document.getElementById('startDate').value = getLocalDateString(firstDay);
+      document.getElementById('endDate').value = getLocalDateString(lastDay);
+    }
+
+    function showAllTime() {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      renderTransactions();
+    }
+
+    function resetToCurrentMonth() {
+      setDefaultCurrentMonth();
+      document.getElementById('typeFilter').value = 'all';
+      document.getElementById('searchInput').value = '';
+      renderTransactions();
+    }
+
+    // रिफ्रेश बटण फंक्शन
+    async function refreshApp() {
+      const btn = document.getElementById('btnRefresh');
+      btn.innerText = '⏳...';
+      btn.disabled = true;
+
+      resetToCurrentMonth();
+      document.getElementById('transDate').value = getLocalDateString(new Date());
+
+      if (navigator.onLine) {
+        await fetchDataFromSheet();
+      } else {
+        loadUserLocalData();
+        renderTransactions();
+        setSyncBadge('offline');
+      }
+
+      setTimeout(() => {
+        btn.innerText = '🔄 रिफ्रेश';
+        btn.disabled = false;
+      }, 600);
+    }
 
     function checkLogin() {
       if (!currentUserId) {
@@ -270,14 +319,6 @@
       catSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    function clearFilters() {
-      document.getElementById('startDate').value = '';
-      document.getElementById('endDate').value = '';
-      document.getElementById('typeFilter').value = 'all';
-      document.getElementById('searchInput').value = '';
-      renderTransactions();
-    }
-
     function handleFormSubmit(e) {
       e.preventDefault();
       const amount = parseFloat(document.getElementById('amount').value);
@@ -302,7 +343,7 @@
 
       renderTransactions();
       e.target.reset();
-      document.getElementById('transDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('transDate').value = getLocalDateString(new Date());
       setType(selectedType);
 
       if (navigator.onLine) {
@@ -327,7 +368,6 @@
       }
     }
 
-    // १. शीटमधून डेटा ॲपमध्ये आणणे
     async function fetchDataFromSheet() {
       if (!currentUserId || !navigator.onLine) return;
       setSyncBadge('syncing');
@@ -354,7 +394,6 @@
       }
     }
 
-    // २. डेटा गुगल शीटवर सेव्ह करणे
     async function triggerSync() {
       if (isSyncing || !currentUserId || !navigator.onLine) return;
       if (pendingQueue.length === 0 && deleteQueue.length === 0) {
@@ -366,7 +405,6 @@
       setSyncBadge('syncing');
 
       try {
-        // डिलीट नोंदी शीटवर सिंक करणे
         while (deleteQueue.length > 0) {
           const id = deleteQueue[0];
           await fetch(`${SCRIPT_URL}?action=delete&id=${encodeURIComponent(id)}`, {
@@ -377,7 +415,6 @@
           saveUserLocalData();
         }
 
-        // नवीन नोंदी शीटवर सिंक करणे
         if (pendingQueue.length > 0) {
           const payload = encodeURIComponent(JSON.stringify(pendingQueue));
           const syncUrl = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserId)}&data=${payload}`;
@@ -414,45 +451,58 @@
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
+      const historyTitle = document.getElementById('historyTitle');
+      if (!startDate && !endDate) {
+        historyTitle.innerText = "सर्व नोंदींचा इतिहास (All Time)";
+      } else {
+        historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
+      }
+
       let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0;
       transactions.forEach(t => {
         if (t.type === 'income') lifetimeIncome += t.amount;
         else if (t.type === 'expense') lifetimeExpense += t.amount;
         else if (t.type === 'saving') lifetimeSaving += t.amount;
       });
+      const lifetimeNetBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
+      document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
 
-      const netBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
-      const balEl = document.getElementById('totalBalance');
-      balEl.innerText = `₹${netBalance.toLocaleString('en-IN')}`;
-      balEl.style.color = netBalance >= 0 ? '#2563eb' : '#ef4444';
-
-      const filtered = transactions.filter(t => {
-        const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
-        const matchType = typeFilter === 'all' || t.type === typeFilter;
+      const dateFiltered = transactions.filter(t => {
         let matchDate = true;
         if (startDate && t.date < startDate) matchDate = false;
         if (endDate && t.date > endDate) matchDate = false;
-        return matchSearch && matchType && matchDate;
+        return matchDate;
       });
 
       let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0;
-      filtered.forEach(t => {
+      dateFiltered.forEach(t => {
         if (t.type === 'income') rangeIncome += t.amount;
         else if (t.type === 'expense') rangeExpense += t.amount;
         else if (t.type === 'saving') rangeSaving += t.amount;
       });
 
+      const rangeNetBalance = rangeIncome - (rangeExpense + rangeSaving);
+      const balEl = document.getElementById('totalBalance');
+      balEl.innerText = `₹${rangeNetBalance.toLocaleString('en-IN')}`;
+      balEl.style.color = rangeNetBalance >= 0 ? '#2563eb' : '#ef4444';
+
       document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
       document.getElementById('totalExpense').innerText = `₹${rangeExpense.toLocaleString('en-IN')}`;
       document.getElementById('totalSavings').innerText = `₹${rangeSaving.toLocaleString('en-IN')}`;
 
+      const listFiltered = dateFiltered.filter(t => {
+        const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
+        const matchType = typeFilter === 'all' || t.type === typeFilter;
+        return matchSearch && matchType;
+      });
+
       const container = document.getElementById('txList');
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
+      if (listFiltered.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">या कालावधीत कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
         return;
       }
 
-      container.innerHTML = filtered.map(t => {
+      container.innerHTML = listFiltered.map(t => {
         let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
         if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
         else if (t.type === 'saving') { badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
@@ -491,8 +541,9 @@
     window.addEventListener('offline', () => setSyncBadge('offline'));
 
     setType('expense');
+    setDefaultCurrentMonth();
     checkLogin();
-        // सर्विस वर्कर सुरू करणे (ऑफलाइन चालण्यासाठी)
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -500,7 +551,6 @@
           .catch((err) => console.log('Offline Support Failed:', err));
       });
     }
-
   </script>
 </body>
 </html>
