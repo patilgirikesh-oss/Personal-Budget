@@ -91,11 +91,11 @@
         <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
       </div>
       <div class="card">
-        <p class="lbl-text">निवडलेली जमा</p>
+        <p class="lbl-text">कमाई</p>
         <p id="totalIncome" class="val-text" style="color: #10b981; font-size: 16px;">₹0</p>
       </div>
       <div class="card">
-        <p class="lbl-text">निवडलेला खर्च</p>
+        <p class="lbl-text">झालेला खर्च</p>
         <p id="totalExpense" class="val-text" style="color: #ef4444; font-size: 16px;">₹0</p>
       </div>
     </div>
@@ -148,8 +148,8 @@
           <label class="lbl-text">माध्यम</label>
           <select id="mode">
             <option value="UPI">UPI / GPay</option>
-            <option value="Bank">बँक खात्यातून</option>
             <option value="Cash">रोख (Cash)</option>
+            <option value="Credit Card">क्रेडिट खात्यातून</option>
           </select>
         </div>
         <div>
@@ -178,7 +178,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQ7D57rmAajnRGubdz7ZbnnyI7Baw-pJVsHBVx3pvvBdhziXpWGEoP9SBdaskU7NDl/exec";
 
     const expenseCategories = ["किराणा", "प्रवास/पेट्रोल", "जेवण/हॉटेल", "लाईट बिल/रिचार्ज", "कपडे/शॉपिंग", "औषधे", "इतर खर्च"];
-    const incomeCategories = ["पगार (Salary)", "व्यवसाय (Business)", "भाडे", "व्याज", "इतर जमा"];
+    const incomeCategories = ["पगार (Salary)", "लाभांश (Dividend)", "भाडे", "व्याज", "इतर जमा"];
     const savingCategories = ["Mutual Fund / SIP", "शेअर्स (Stocks)", "FD / RD", "सोने (Gold)", "PPF / PF", "विमा (Insurance/LIC)", "इतर बचत"];
 
     let selectedType = 'expense';
