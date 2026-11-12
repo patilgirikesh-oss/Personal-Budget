@@ -33,6 +33,8 @@
     .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn-submit:active { transform: scale(0.98); }
+    .btn-search-date { width: 100%; background: #16a34a; color: #fff; border: none; padding: 10px; border-radius: 9px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-search-date:active { transform: scale(0.98); }
     .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
     .tx-notes { font-size: 14px; font-weight: bold; color: #0f172a; }
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
@@ -79,16 +81,23 @@
     <!-- १. सर्च आणि तारीख फिल्टर (Filters - 1st) -->
     <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
       <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, SIP)...">
+      
       <div class="grid-2">
         <div>
           <span style="font-size: 10px; color: #64748b;">या तारखेपासून (From)</span>
-          <input type="date" id="startDate" onchange="renderTransactions()">
+          <input type="date" id="startDate">
         </div>
         <div>
           <span style="font-size: 10px; color: #64748b;">या तारखेपर्यंत (To)</span>
-          <input type="date" id="endDate" onchange="renderTransactions()">
+          <input type="date" id="endDate">
         </div>
       </div>
+
+      <!-- नवीन Search बटण -->
+      <button type="button" onclick="searchByDateRange()" class="btn-search-date">
+        🔍 निवडलेल्या तारखा शोधा (Search)
+      </button>
+
       <div style="display: flex; gap: 6px; align-items: center;">
         <select id="typeFilter" onchange="renderTransactions()" style="flex: 1;">
           <option value="all">सर्व प्रकार</option>
@@ -192,6 +201,13 @@
       return `${year}-${month}-${day}`;
     }
 
+    // तारीख नेहमी YYYY-MM-DD फॉरमॅटमध्ये घेण्यासाठी हेल्पर फंक्शन
+    function normalizeDate(dateStr) {
+      if (!dateStr) return '';
+      if (dateStr.includes('T')) return dateStr.split('T')[0];
+      return dateStr.trim();
+    }
+
     document.getElementById('transDate').value = getLocalDateString(new Date());
 
     function setDefaultCurrentMonth() {
@@ -201,6 +217,18 @@
 
       document.getElementById('startDate').value = getLocalDateString(firstDay);
       document.getElementById('endDate').value = getLocalDateString(lastDay);
+    }
+
+    // From Date ते To Date सर्च बटण फंक्शन
+    function searchByDateRange() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      if (startDate && endDate && startDate > endDate) {
+        alert("कृपया योग्य तारीख निवडा! 'या तारखेपासून (From)' ही तारीख 'या तारखेपर्यंत (To)' पेक्षा लहान किंवा समान असावी.");
+        return;
+      }
+      renderTransactions();
     }
 
     function showAllTime() {
@@ -216,7 +244,6 @@
       renderTransactions();
     }
 
-    // रिफ्रेश बटण फंक्शन
     async function refreshApp() {
       const btn = document.getElementById('btnRefresh');
       btn.innerText = '⏳...';
@@ -458,99 +485,119 @@
         historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
       }
 
+      // 1. एकूण शिल्लक (Lifetime) मोजणी
       let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0;
       transactions.forEach(t => {
-        if (t.type === 'income') lifetimeIncome += t.amount;
-        else if (t.type === 'expense') lifetimeExpense += t.amount;
-        else if (t.type === 'saving') lifetimeSaving += t.amount;
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'income') lifetimeIncome += amt;
+        else if (t.type === 'expense') lifetimeExpense += amt;
+        else if (t.type === 'saving') lifetimeSaving += amt;
       });
       const lifetimeNetBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
 
+      // 2. From Date ते To Date फिल्टर
       const dateFiltered = transactions.filter(t => {
-        let matchDate = true;
-        if (startDate && t.date < startDate) matchDate = false;
-        if (endDate && t.date > endDate) matchDate = false;
-        return matchDate;
+        const txDate = normalizeDate(t.date);
+        if (startDate && txDate < startDate) return false;
+        if (endDate && txDate > endDate) return false;
+        return true;
       });
 
-      let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0;
+      // 3. निवडलेल्या काळातील हिशोब कार्ड्स अपडेट करणे
+      let periodIncome = 0, periodExpense = 0, periodSaving = 0;
       dateFiltered.forEach(t => {
-        if (t.type === 'income') rangeIncome += t.amount;
-        else if (t.type === 'expense') rangeExpense += t.amount;
-        else if (t.type === 'saving') rangeSaving += t.amount;
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'income') periodIncome += amt;
+        else if (t.type === 'expense') periodExpense += amt;
+        else if (t.type === 'saving') periodSaving += amt;
+      });
+      const periodBalance = periodIncome - (periodExpense + periodSaving);
+
+      document.getElementById('totalBalance').innerText = `₹${periodBalance.toLocaleString('en-IN')}`;
+      document.getElementById('totalSavings').innerText = `₹${periodSaving.toLocaleString('en-IN')}`;
+      document.getElementById('totalIncome').innerText = `₹${periodIncome.toLocaleString('en-IN')}`;
+      document.getElementById('totalExpense').innerText = `₹${periodExpense.toLocaleString('en-IN')}`;
+
+      // 4. सर्च आणि प्रकार (Type) फिल्टर
+      const finalFiltered = dateFiltered.filter(t => {
+        const matchesType = (typeFilter === 'all' || t.type === typeFilter);
+        const matchesSearch = !search || 
+          (t.notes && t.notes.toLowerCase().includes(search)) || 
+          (t.category && t.category.toLowerCase().includes(search)) ||
+          (t.mode && t.mode.toLowerCase().includes(search));
+        return matchesType && matchesSearch;
       });
 
-      const rangeNetBalance = rangeIncome - (rangeExpense + rangeSaving);
-      const balEl = document.getElementById('totalBalance');
-      balEl.innerText = `₹${rangeNetBalance.toLocaleString('en-IN')}`;
-      balEl.style.color = rangeNetBalance >= 0 ? '#2563eb' : '#ef4444';
-
-      document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
-      document.getElementById('totalExpense').innerText = `₹${rangeExpense.toLocaleString('en-IN')}`;
-      document.getElementById('totalSavings').innerText = `₹${rangeSaving.toLocaleString('en-IN')}`;
-
-      const listFiltered = dateFiltered.filter(t => {
-        const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
-        const matchType = typeFilter === 'all' || t.type === typeFilter;
-        return matchSearch && matchType;
-      });
-
-      const container = document.getElementById('txList');
-      if (listFiltered.length === 0) {
-        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">या कालावधीत कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
+      // 5. यादी स्क्रीनवर दाखवणे
+      const listEl = document.getElementById('txList');
+      if (finalFiltered.length === 0) {
+        listEl.innerHTML = `<div class="card" style="text-align: center; color: #64748b; font-size: 13px; padding: 24px;">निवडलेल्या काळात कोणतीही नोंद आढळली नाही.</div>`;
         return;
       }
 
-      container.innerHTML = listFiltered.map(t => {
-        let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
-        if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
-        else if (t.type === 'saving') { badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
+      listEl.innerHTML = finalFiltered.map(t => {
+        const isInc = t.type === 'income';
+        const isSav = t.type === 'saving';
+        const color = isInc ? '#10b981' : (isSav ? '#4f46e5' : '#ef4444');
+        const sign = isInc ? '+' : '-';
+        const cleanDate = normalizeDate(t.date);
 
         return `
           <div class="tx-item">
             <div>
-              <p class="tx-notes">${t.notes}</p>
-              <p class="tx-sub">${t.date} • ${t.mode} • <strong>${typeBadge}</strong> • ${t.category}</p>
+              <div class="tx-notes">${t.notes || t.category}</div>
+              <div class="tx-sub">${cleanDate} • ${t.category} • ${t.mode}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 14px; font-weight: bold; color: ${badgeColor};">
-                ${sign} ₹${t.amount.toLocaleString('en-IN')}
-              </span>
-              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
+              <strong style="color: ${color}; font-size: 15px;">${sign}₹${Number(t.amount).toLocaleString('en-IN')}</strong>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')" title="हटवा">🗑️</button>
             </div>
           </div>
         `;
       }).join('');
     }
 
+    // CSV रिपोर्ट डाउनलोड (निवडलेल्या तारखांनुसार)
     function downloadCSVReport() {
-      if (transactions.length === 0) { alert("नोंद उपलब्ध नाही!"); return; }
-      let csv = "ID,Tariqh,Prakar,Vargawari,Rakkam,Madhyam,Tip\n";
-      transactions.forEach(t => {
-        csv += `"${t.id}","${t.date}","${t.type}","${t.category}","${t.amount}","${t.mode}","${t.notes.replace(/"/g, '""')}"\n`;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      const filtered = transactions.filter(t => {
+        const txDate = normalizeDate(t.date);
+        if (startDate && txDate < startDate) return false;
+        if (endDate && txDate > endDate) return false;
+        return true;
       });
+
+      if (filtered.length === 0) {
+        alert("डाउनलोड करण्यासाठी निवडलेल्या काळात कोणताही डेटा नाही!");
+        return;
+      }
+
+      let csv = "\uFEFFतारीख,प्रकार,वर्गवारी,माध्यम,तपशील,रक्कम\n";
+      filtered.forEach(t => {
+        const typeLabel = t.type === 'income' ? 'जमा' : (t.type === 'saving' ? 'गुंतवणूक' : 'खर्च');
+        const cleanNote = (t.notes || '').replace(/,/g, ' ');
+        csv += `${normalizeDate(t.date)},${typeLabel},${t.category},${t.mode},${cleanNote},${t.amount}\n`;
+      });
+
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Budget_Report_${currentUserId}.csv`;
+      a.href = url;
+      a.download = `Budget_Report_${startDate || 'Start'}_to_${endDate || 'All'}.csv`;
       a.click();
+      URL.revokeObjectURL(url);
     }
 
-    window.addEventListener('online', fetchDataFromSheet);
-    window.addEventListener('offline', () => setSyncBadge('offline'));
+    window.addEventListener('online', () => { triggerSync(); });
+    window.addEventListener('offline', () => { setSyncBadge('offline'); });
 
+    // ॲप सुरू करताना सेटअप
     setType('expense');
     setDefaultCurrentMonth();
     checkLogin();
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('Offline Support Ready:', reg.scope))
-          .catch((err) => console.log('Offline Support Failed:', err));
-      });
-    }
   </script>
 </body>
 </html>
