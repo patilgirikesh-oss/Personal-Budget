@@ -18,6 +18,8 @@
     .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
     .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .btn-hdr:active { transform: scale(0.95); }
+    .btn-menu { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 6px 10px; border-radius: 8px; font-size: 18px; line-height: 1; cursor: pointer; }
+    .btn-menu:active { transform: scale(0.95); }
     .main-wrap { max-width: 480px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -32,7 +34,6 @@
     .type-btn.active-inc { background: #10b981; color: #fff; border-color: #10b981; }
     .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     
-    /* गुंतवणूक उप-पर्याय (Invest / Withdraw) */
     .sub-sav-box { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #eef2ff; padding: 6px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #c7d2fe; }
     .sub-btn { padding: 7px 4px; border-radius: 7px; text-align: center; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
     .sub-btn.active-invest { background: #4f46e5; color: #fff; border-color: #4f46e5; }
@@ -45,16 +46,86 @@
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
     .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
     .tx-del:hover { color: #ef4444; }
-    #authModal { position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.88); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
     .auth-tab { padding: 8px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #64748b; }
     .auth-tab.active { background: #fff; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+    /* ३ रेषांचा साईडबार मेनू */
+    #filterDrawerBackdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 90; display: none; }
+    #filterDrawer { position: fixed; top: 0; left: 0; bottom: 0; width: 82%; max-width: 310px; background: #fff; z-index: 95; padding: 18px 16px; box-shadow: 4px 0 15px rgba(0,0,0,0.15); transform: translateX(-100%); transition: transform 0.25s ease; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    #filterDrawer.open { transform: translateX(0); }
+    .drawer-btn { width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 13px; font-weight: bold; color: #0f172a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .drawer-btn:active { transform: scale(0.98); background: #eff6ff; border-color: #93c5fd; }
   </style>
 </head>
 <body>
 
+  <!-- ३ रेषांचा मेनू (Side Drawer) -->
+  <div id="filterDrawerBackdrop" onclick="closeFilterDrawer()"></div>
+  <aside id="filterDrawer">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+      <h2 style="font-size: 16px; font-weight: bold; color: #0f172a;">☰ मेनू आणि फिल्टर</h2>
+      <button type="button" onclick="closeFilterDrawer()" style="background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- १. तारीख फिल्टर पॉप-अप उघडणारे बटण -->
+    <button type="button" onclick="openDateFilterModal()" class="drawer-btn" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
+      <span>📅 तारीख निवडा (From - To)</span>
+      <span>›</span>
+    </button>
+
+    <!-- २. सर्व नोंदी / चालू महिना बटणे -->
+    <button type="button" onclick="showAllTime(); closeFilterDrawer();" class="drawer-btn">
+      <span>📋 सर्व नोंदी पहा (All Time)</span>
+      <span>›</span>
+    </button>
+
+    <button type="button" onclick="resetToCurrentMonth(); closeFilterDrawer();" class="drawer-btn">
+      <span>🗓️ चालू महिना दाखवा</span>
+      <span>›</span>
+    </button>
+
+    <!-- ३. व्यवहाराचा प्रकार फिल्टर -->
+    <div style="margin-top: 4px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+      <label class="lbl-text" style="display: block; margin-bottom: 6px;">व्यवहाराचा प्रकार निवडा</label>
+      <select id="typeFilter" onchange="renderTransactions(); closeFilterDrawer();">
+        <option value="all">सर्व प्रकार</option>
+        <option value="expense">केवळ खर्च</option>
+        <option value="income">केवळ जमा</option>
+        <option value="saving">केवळ गुंतवणूक (जमा)</option>
+        <option value="withdraw">गुंतवणूक काढली (Withdraw)</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- From Date आणि To Date साठी स्वतंत्र पॉप-अप (Date Filter Popup Modal) -->
+  <div id="dateFilterModal" class="modal-overlay" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 350px; padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+        <h3 style="font-size: 16px; font-weight: bold; color: #0f172a;">📅 कालावधी निवडा</h3>
+        <button type="button" onclick="closeDateFilterModal()" style="background: transparent; border: none; font-size: 16px; color: #64748b; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">या तारखेपासून (From Date)</label>
+        <input type="date" id="startDate">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">या तारखेपर्यंत (To Date)</label>
+        <input type="date" id="endDate">
+      </div>
+
+      <div class="grid-2">
+        <button type="button" onclick="resetToCurrentMonth(); closeDateFilterModal();" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">चालू महिना</button>
+        <button type="button" onclick="applyDateFilterModal()" style="padding: 10px; border-radius: 9px; border: none; background: #2563eb; font-weight: bold; color: #fff; cursor: pointer;">लागू करा</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Login / Create Account Modal -->
-  <div id="authModal" style="display: none;">
+  <div id="authModal" class="modal-overlay" style="display: none;">
     <div class="card" style="width: 100%; max-width: 370px; text-align: center; padding: 22px;">
       <div style="font-size: 36px; margin-bottom: 6px;">🔐</div>
       <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">माझे बजेट</h2>
@@ -81,13 +152,30 @@
     </div>
   </div>
 
+  <!-- नोंद हटवण्यासाठी पासवर्ड विचारणारा बॉक्स -->
+  <div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 340px; text-align: center; padding: 20px;">
+      <div style="font-size: 32px; margin-bottom: 6px;">🛡️</div>
+      <h3 style="font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 6px;">नोंद हटवण्यासाठी पासवर्ड टाका</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">सुरक्षिततेसाठी तुमचा लॉगिन पासवर्ड प्रविष्ट करा.</p>
+      <input type="password" id="deleteConfirmPass" placeholder="तुमचा पासवर्ड टाका" style="text-align: center; margin-bottom: 14px;" onkeydown="if(event.key==='Enter') confirmDeleteWithPassword()">
+      <div class="grid-2">
+        <button type="button" onclick="closeDeleteModal()" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">रद्द करा</button>
+        <button type="button" onclick="confirmDeleteWithPassword()" style="padding: 10px; border-radius: 9px; border: none; background: #ef4444; font-weight: bold; color: #fff; cursor: pointer;">हटवा (Delete)</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header>
-    <div>
-      <h1 style="font-size: 16px; font-weight: bold;">💰 माझे बजेट</h1>
-      <p id="syncStatus" style="font-size: 11px; margin-top: 2px;">
-        <span class="badge-dot" style="background: #10b981;"></span> सिंक चालू
-      </p>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button type="button" onclick="openFilterDrawer()" class="btn-menu" title="मेनू आणि फिल्टर">☰</button>
+      <div>
+        <h1 style="font-size: 16px; font-weight: bold;">💰 माझे बजेट</h1>
+        <p id="syncStatus" style="font-size: 11px; margin-top: 2px;">
+          <span class="badge-dot" style="background: #10b981;"></span> सिंक चालू
+        </p>
+      </div>
     </div>
     <div style="display: flex; gap: 5px;">
       <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr">🔄</button>
@@ -98,47 +186,29 @@
   </header>
 
   <main class="main-wrap">
-    <!-- User Status -->
-    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; padding: 0 4px;">
+    <!-- User Status आणि उजव्या बाजूला 🔎 सर्च आयकॉन -->
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; padding: 0 4px;">
       <span>खाते: <strong id="displayUserId" style="color: #0f172a;">-</strong></span>
-      <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 सिंक करा</span>
-    </div>
-
-    <!-- १. सर्च आणि तारीख फिल्टर -->
-    <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
-      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (Search)">
-      <div class="grid-2">
-        <div>
-          <span style="font-size: 10px; color: #64748b;">या तारखेपासून (From)</span>
-          <input type="date" id="startDate" onchange="renderTransactions()">
-        </div>
-        <div>
-          <span style="font-size: 10px; color: #64748b;">या तारखेपर्यंत (To)</span>
-          <input type="date" id="endDate" onchange="renderTransactions()">
-        </div>
-      </div>
-      <div style="display: flex; gap: 6px; align-items: center;">
-        <select id="typeFilter" onchange="renderTransactions()" style="flex: 1;">
-          <option value="all">सर्व प्रकार</option>
-          <option value="expense">केवळ खर्च</option>
-          <option value="income">केवळ जमा</option>
-          <option value="saving">केवळ गुंतवणूक (जमा)</option>
-          <option value="withdraw">गुंतवणूक काढली (Withdraw)</option>
-        </select>
-        <button type="button" onclick="showAllTime()" class="btn-hdr" style="background: #2563eb; color: #fff; border: none; padding: 9px 10px;">सर्व नोंदी</button>
-        <button type="button" onclick="resetToCurrentMonth()" class="btn-hdr" style="background: #e2e8f0; color: #334155; border: none; padding: 9px 10px;">चालू महिना</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 सिंक करा</span>
+        <button type="button" onclick="toggleQuickSearch()" title="त्वरित शोधा" style="background: #fff; border: 1px solid #cbd5e1; border-radius: 7px; padding: 3px 7px; font-size: 13px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">🔎</button>
       </div>
     </div>
 
-    <!-- २. खर्च, जमा, गुंतवणूक नोंद फॉर्म -->
+    <!-- 🔎 वर क्लिक केल्यावर उघडणारा त्वरित सर्च बॉक्स -->
+    <div id="quickSearchBox" style="display: none; position: relative;">
+      <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, पेट्रोल, SIP)..." style="padding-right: 34px; border-color: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,0.1);">
+      <button type="button" onclick="clearQuickSearch()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 14px; color: #64748b; cursor: pointer; padding: 4px;">✕</button>
+    </div>
+
+    <!-- १. खर्च, जमा, गुंतवणूक नोंद फॉर्म -->
     <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
       <div class="grid-3" style="margin-bottom: 10px;">
-        <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
-        <div id="btnTypeInc" class="type-btn" onclick="setType('income')">जमा</div>
-        <div id="btnTypeSav" class="type-btn" onclick="setType('saving')">गुंतवणूक</div>
+        <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च(Expense)</div>
+        <div id="btnTypeInc" class="type-btn" onclick="setType('income')">जमा(Income)</div>
+        <div id="btnTypeSav" class="type-btn" onclick="setType('saving')">गुंतवणूक(Investment)</div>
       </div>
 
-      <!-- फक्त 'गुंतवणूक' वर क्लिक केल्यावरच हा पर्याय दिसेल -->
       <div id="savingActionBox" class="sub-sav-box" style="display: none;">
         <div id="btnSubInvest" class="sub-btn active-invest" onclick="setSavingAction('saving')">➕ नवीन गुंतवणूक</div>
         <div id="btnSubWithdraw" class="sub-btn" onclick="setSavingAction('withdraw')">↩️ गुंतवणूक काढली (Withdraw)</div>
@@ -178,10 +248,10 @@
       <button type="submit" id="btnSubmitForm" class="btn-submit">नोंद सेव्ह करा</button>
     </form>
 
-    <!-- ३. हिशोब कार्ड्स -->
+    <!-- २. हिशोब कार्ड्स -->
     <div class="grid-2">
       <div class="card">
-        <p class="lbl-text">शिल्लक (Balance )</p>
+        <p class="lbl-text">शिल्लक (Balance)</p>
         <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
         <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण शिल्लक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
       </div>
@@ -200,7 +270,7 @@
       </div>
     </div>
 
-    <!-- ४. इतिहास -->
+    <!-- ३. इतिहास -->
     <div>
       <h2 id="historyTitle" style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">चालू महिन्याचा इतिहास</h2>
       <div id="txList"></div>
@@ -218,10 +288,57 @@
     let authMode = 'login';
     let currentUserEmail = localStorage.getItem('budget_user_email') || '';
     let currentUserName = localStorage.getItem('budget_user_name') || '';
+    let currentUserPass = localStorage.getItem('budget_user_pass') || '';
+    let pendingDeleteId = null;
+
     let transactions = [];
     let pendingQueue = [];
     let deleteQueue = [];
     let isSyncing = false;
+
+    // 🔎 त्वरित सर्च बॉक्स उघडणे व बंद करणे
+    function toggleQuickSearch() {
+      const box = document.getElementById('quickSearchBox');
+      const input = document.getElementById('searchInput');
+      if (box.style.display === 'none') {
+        box.style.display = 'block';
+        setTimeout(() => input.focus(), 50);
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    function clearQuickSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('quickSearchBox').style.display = 'none';
+      renderTransactions();
+    }
+
+    // ३ रेषांचा मेनू उघडणे व बंद करणे
+    function openFilterDrawer() {
+      document.getElementById('filterDrawerBackdrop').style.display = 'block';
+      setTimeout(() => document.getElementById('filterDrawer').classList.add('open'), 10);
+    }
+
+    function closeFilterDrawer() {
+      document.getElementById('filterDrawer').classList.remove('open');
+      setTimeout(() => document.getElementById('filterDrawerBackdrop').style.display = 'none', 250);
+    }
+
+    // ३ रेषांच्या मेनूमधून तारीख पॉप-अप उघडणे
+    function openDateFilterModal() {
+      closeFilterDrawer();
+      document.getElementById('dateFilterModal').style.display = 'flex';
+    }
+
+    function closeDateFilterModal() {
+      document.getElementById('dateFilterModal').style.display = 'none';
+    }
+
+    function applyDateFilterModal() {
+      renderTransactions();
+      closeDateFilterModal();
+    }
 
     function getLocalDateString(dateObj) {
       const year = dateObj.getFullYear();
@@ -250,6 +367,7 @@
       setDefaultCurrentMonth();
       document.getElementById('typeFilter').value = 'all';
       document.getElementById('searchInput').value = '';
+      document.getElementById('quickSearchBox').style.display = 'none';
       renderTransactions();
     }
 
@@ -298,11 +416,14 @@
         if (json.status === "success") {
           currentUserEmail = email;
           currentUserName = authMode === 'register' ? name : (json.name || email);
+          currentUserPass = password;
+
           localStorage.setItem('budget_user_email', currentUserEmail);
           localStorage.setItem('budget_user_name', currentUserName);
+          localStorage.setItem('budget_user_pass', currentUserPass);
 
           document.getElementById('authModal').style.display = 'none';
-          document.getElementById('displayUserId').innerText = `${currentUserName} (${currentUserEmail})`;
+          document.getElementById('displayUserId').innerText = `${currentUserName}`;
           loadUserLocalData();
           renderTransactions();
           fetchDataFromSheet();
@@ -322,7 +443,7 @@
         document.getElementById('authModal').style.display = 'flex';
       } else {
         document.getElementById('authModal').style.display = 'none';
-        document.getElementById('displayUserId').innerText = `${currentUserName} (${currentUserEmail})`;
+        document.getElementById('displayUserId').innerText = `${currentUserName}`;
         loadUserLocalData();
         renderTransactions();
         if (navigator.onLine) {
@@ -337,6 +458,7 @@
       if (!confirm("तुम्हाला खात्यातून लॉगआउट करायचे आहे का?")) return;
       localStorage.removeItem('budget_user_email');
       localStorage.removeItem('budget_user_name');
+      localStorage.removeItem('budget_user_pass');
       location.reload();
     }
 
@@ -415,7 +537,6 @@
       }
     }
 
-    // मुख्य प्रकार निवडणे: खर्च, जमा किंवा गुंतवणूक
     function setType(type) {
       const isSavGroup = (type === 'saving' || type === 'withdraw');
       
@@ -443,9 +564,8 @@
       }
     }
 
-    // गुंतवणूक निवडल्यावर 'नवीन गुंतवणूक' किंवा 'काढली (Withdraw)' निवडणे
     function setSavingAction(action) {
-      selectedType = action; // 'saving' किंवा 'withdraw'
+      selectedType = action;
       document.getElementById('btnSubInvest').className = 'sub-btn' + (action === 'saving' ? ' active-invest' : '');
       document.getElementById('btnSubWithdraw').className = 'sub-btn' + (action === 'withdraw' ? ' active-withdraw' : '');
 
@@ -498,10 +618,60 @@
     }
 
     function deleteTransaction(id) {
-      if (!confirm("ही नोंद नक्की हटवायची आहे का?")) return;
-      transactions = transactions.filter(t => t.id !== id);
-      pendingQueue = pendingQueue.filter(t => t.id !== id);
-      deleteQueue.push(id);
+      pendingDeleteId = id;
+      document.getElementById('deleteConfirmPass').value = '';
+      document.getElementById('deleteModal').style.display = 'flex';
+      setTimeout(() => document.getElementById('deleteConfirmPass').focus(), 100);
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      document.getElementById('deleteConfirmPass').value = '';
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    async function confirmDeleteWithPassword() {
+      if (!pendingDeleteId) return;
+      const enteredPass = document.getElementById('deleteConfirmPass').value.trim();
+
+      if (!enteredPass) {
+        alert("कृपया पासवर्ड प्रविष्ट करा!");
+        return;
+      }
+
+      if (currentUserPass) {
+        if (enteredPass !== currentUserPass) {
+          alert("❌ चुकीचा पासवर्ड! नोंद हटवली गेली नाही.");
+          document.getElementById('deleteConfirmPass').value = '';
+          return;
+        }
+      } else {
+        if (!navigator.onLine) {
+          alert("पासवर्ड तपासण्यासाठी इंटरनेट आवश्यक आहे (किंवा एकदा लॉगआउट करून पुन्हा लॉगिन करा).");
+          return;
+        }
+        try {
+          const res = await fetch(`${SCRIPT_URL}?action=login&email=${encodeURIComponent(currentUserEmail)}&password=${encodeURIComponent(enteredPass)}`);
+          const json = await res.json();
+          if (json.status !== "success") {
+            alert("❌ चुकीचा पासवर्ड! नोंद हटवली गेली नाही.");
+            document.getElementById('deleteConfirmPass').value = '';
+            return;
+          }
+          currentUserPass = enteredPass;
+          localStorage.setItem('budget_user_pass', currentUserPass);
+        } catch (e) {
+          alert("पासवर्ड तपासता आला नाही. इंटरनेट तपासा!");
+          return;
+        }
+      }
+
+      const idToDelete = pendingDeleteId;
+      closeDeleteModal();
+
+      transactions = transactions.filter(t => t.id !== idToDelete);
+      pendingQueue = pendingQueue.filter(t => t.id !== idToDelete);
+      deleteQueue.push(idToDelete);
       saveUserLocalData();
       renderTransactions();
 
