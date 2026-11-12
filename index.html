@@ -16,7 +16,7 @@
     body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 70px; user-select: none; }
     header { background-color: #2563eb; color: #ffffff; padding: 14px 16px; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
     .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .btn-hdr:active { transform: scale(0.95); }
     .main-wrap { max-width: 480px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -33,26 +33,44 @@
     .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn-submit:active { transform: scale(0.98); }
-    .btn-search-date { width: 100%; background: #16a34a; color: #fff; border: none; padding: 10px; border-radius: 9px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .btn-search-date:active { transform: scale(0.98); }
     .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
     .tx-notes { font-size: 14px; font-weight: bold; color: #0f172a; }
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
     .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
     .tx-del:hover { color: #ef4444; }
-    #loginModal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    #authModal { position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
+    .auth-tab { padding: 8px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #64748b; }
+    .auth-tab.active { background: #fff; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
-  <!-- Login Modal -->
-  <div id="loginModal" style="display: none;">
-    <div class="card" style="width: 100%; max-width: 360px; text-align: center; padding: 22px;">
-      <div style="font-size: 36px; margin-bottom: 8px;">👤</div>
-      <h2 style="font-size: 17px; font-weight: bold; margin-bottom: 6px;">बजेट ॲप</h2>
-      <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">मोबाईल हरवला तरी डेटा सुरक्षित राहण्यासाठी तुमचा नंबर प्रविष्ट करा.</p>
-      <input type="tel" id="userPhoneInput" placeholder="१० अंकी नंबर" maxlength="10" style="text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 12px;">
-      <button type="button" onclick="performLogin()" class="btn-submit">ॲप सुरू करा</button>
+  <!-- Login / Create Account Modal -->
+  <div id="authModal" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 370px; text-align: center; padding: 22px;">
+      <div style="font-size: 36px; margin-bottom: 6px;">🔐</div>
+      <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">माझे बजेट</h2>
+      <p style="font-size: 11px; color: #64748b; margin-bottom: 14px;">तुमचा वैयक्तिक डेटा सुरक्षित ठेवण्यासाठी लॉगिन करा किंवा नवीन खाते उघडा.</p>
+
+      <div class="auth-tabs">
+        <div id="tabLogin" class="auth-tab active" onclick="switchAuthTab('login')">लॉगिन (Login)</div>
+        <div id="tabRegister" class="auth-tab" onclick="switchAuthTab('register')">नवीन खाते</div>
+      </div>
+
+      <div id="registerNameWrap" style="display: none; margin-bottom: 10px;">
+        <input type="text" id="authName" placeholder="तुमचे पूर्ण नाव">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <input type="email" id="authEmail" placeholder="तुमचा ईमेल आयडी (Email)">
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <input type="password" id="authPassword" placeholder="पासवर्ड (Password)">
+      </div>
+
+      <button type="button" id="btnAuthSubmit" onclick="submitAuth()" class="btn-submit">लॉगिन करा</button>
     </div>
   </div>
 
@@ -64,39 +82,34 @@
         <span class="badge-dot" style="background: #10b981;"></span> सिंक चालू
       </p>
     </div>
-    <div style="display: flex; gap: 6px;">
-      <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr">🔄 रिफ्रेश</button>
-      <button type="button" onclick="downloadCSVReport()" class="btn-hdr">📥 रिपोर्ट</button>
-      <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;">🚪</button>
+    <div style="display: flex; gap: 5px;">
+      <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr">🔄</button>
+      <button type="button" id="btnEmailReport" onclick="sendReportToEmail()" class="btn-hdr" title="ईमेलवर रिपोर्ट पाठवा">📧 ईमेल</button>
+      <button type="button" onclick="downloadCSVReport()" class="btn-hdr" title="CSV डाउनलोड करा">📥</button>
+      <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;" title="लॉगआउट">🚪</button>
     </div>
   </header>
 
   <main class="main-wrap">
     <!-- User Status -->
     <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; padding: 0 4px;">
-      <span>युझर: <strong id="displayUserId" style="color: #0f172a;">-</strong></span>
-      <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 डेटा सिंक करा</span>
+      <span>खाते: <strong id="displayUserId" style="color: #0f172a;">-</strong></span>
+      <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 सिंक करा</span>
     </div>
 
-    <!-- १. सर्च आणि तारीख फिल्टर (Filters - 1st) -->
+    <!-- १. सर्च आणि तारीख फिल्टर -->
     <div class="card" style="display: flex; flex-direction: column; gap: 8px;">
       <input type="text" id="searchInput" oninput="renderTransactions()" placeholder="काहीही शोधा (किराणा, SIP)...">
-      
       <div class="grid-2">
         <div>
           <span style="font-size: 10px; color: #64748b;">या तारखेपासून (From)</span>
-          <input type="date" id="startDate">
+          <input type="date" id="startDate" onchange="renderTransactions()">
         </div>
         <div>
           <span style="font-size: 10px; color: #64748b;">या तारखेपर्यंत (To)</span>
-          <input type="date" id="endDate">
+          <input type="date" id="endDate" onchange="renderTransactions()">
         </div>
       </div>
-
-      <button type="button" onclick="searchByDateRange()" class="btn-search-date">
-        🔍 निवडलेल्या तारखा शोधा (Search)
-      </button>
-
       <div style="display: flex; gap: 6px; align-items: center;">
         <select id="typeFilter" onchange="renderTransactions()" style="flex: 1;">
           <option value="all">सर्व प्रकार</option>
@@ -109,7 +122,7 @@
       </div>
     </div>
 
-    <!-- २. खर्च, जमा, गुंतवणूक नोंद फॉर्म (Entry Form - 2nd) -->
+    <!-- २. खर्च, जमा, गुंतवणूक नोंद फॉर्म -->
     <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
       <div class="grid-3" style="margin-bottom: 12px;">
         <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
@@ -151,7 +164,7 @@
       <button type="submit" class="btn-submit">नोंद सेव्ह करा</button>
     </form>
 
-    <!-- ३. हिशोब कार्ड्स (Summary Cards - 3rd) -->
+    <!-- ३. हिशोब कार्ड्स -->
     <div class="grid-2">
       <div class="card">
         <p class="lbl-text">शिल्लक (निवडलेला काळ)</p>
@@ -172,7 +185,7 @@
       </div>
     </div>
 
-    <!-- ४. इतिहास (History - 4th) -->
+    <!-- ४. इतिहास -->
     <div>
       <h2 id="historyTitle" style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">चालू महिन्याचा इतिहास</h2>
       <div id="txList"></div>
@@ -187,7 +200,9 @@
     const savingCategories = ["Mutual Fund / SIP", "शेअर्स (Stocks)", "FD / RD", "सोने (Gold)", "PPF / PF", "विमा (Insurance/LIC)", "इतर बचत"];
 
     let selectedType = 'expense';
-    let currentUserId = localStorage.getItem('budget_user_id') || '';
+    let authMode = 'login';
+    let currentUserEmail = localStorage.getItem('budget_user_email') || '';
+    let currentUserName = localStorage.getItem('budget_user_name') || '';
     let transactions = [];
     let pendingQueue = [];
     let deleteQueue = [];
@@ -200,40 +215,14 @@
       return `${year}-${month}-${day}`;
     }
 
-    // भारतीय वेळेनुसार (Local Timezone) तारीख अचूक YYYY-MM-DD फॉरमॅटमध्ये घेण्यासाठी
-    function normalizeDate(dateVal) {
-      if (!dateVal) return '';
-      const str = String(dateVal).trim();
-      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-        return str;
-      }
-      const parsed = new Date(str);
-      if (!isNaN(parsed.getTime())) {
-        return getLocalDateString(parsed);
-      }
-      return str.split('T')[0];
-    }
-
     document.getElementById('transDate').value = getLocalDateString(new Date());
 
     function setDefaultCurrentMonth() {
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
       document.getElementById('startDate').value = getLocalDateString(firstDay);
       document.getElementById('endDate').value = getLocalDateString(lastDay);
-    }
-
-    function searchByDateRange() {
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-
-      if (startDate && endDate && startDate > endDate) {
-        alert("कृपया योग्य तारीख निवडा! 'या तारखेपासून (From)' ही तारीख 'या तारखेपर्यंत (To)' पेक्षा लहान किंवा समान असावी.");
-        return;
-      }
-      renderTransactions();
     }
 
     function showAllTime() {
@@ -249,9 +238,115 @@
       renderTransactions();
     }
 
+    // लॉगिन आणि रजिस्टर टॅब बदलणे
+    function switchAuthTab(mode) {
+      authMode = mode;
+      document.getElementById('tabLogin').className = 'auth-tab' + (mode === 'login' ? ' active' : '');
+      document.getElementById('tabRegister').className = 'auth-tab' + (mode === 'register' ? ' active' : '');
+      document.getElementById('registerNameWrap').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('btnAuthSubmit').innerText = mode === 'login' ? 'लॉगिन करा' : 'नवीन खाते तयार करा';
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById('authEmail').value.trim().toLowerCase();
+      const password = document.getElementById('authPassword').value.trim();
+      const name = document.getElementById('authName').value.trim();
+
+      if (!email || !email.includes('@')) {
+        alert("कृपया वैध ईमेल आयडी प्रविष्ट करा!");
+        return;
+      }
+      if (!password || password.length < 4) {
+        alert("पासवर्ड किमान ४ अंकी/अक्षरी असावा!");
+        return;
+      }
+      if (authMode === 'register' && !name) {
+        alert("कृपया तुमचे नाव प्रविष्ट करा!");
+        return;
+      }
+      if (!navigator.onLine) {
+        alert("खाते तपासण्यासाठी इंटरनेट चालू असणे आवश्यक आहे!");
+        return;
+      }
+
+      const btn = document.getElementById('btnAuthSubmit');
+      btn.disabled = true;
+      btn.innerText = "कृपया प्रतीक्षा करा...";
+
+      try {
+        const url = authMode === 'register'
+          ? `${SCRIPT_URL}?action=register&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&name=${encodeURIComponent(name)}`
+          : `${SCRIPT_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (json.status === "success") {
+          currentUserEmail = email;
+          currentUserName = authMode === 'register' ? name : (json.name || email);
+          localStorage.setItem('budget_user_email', currentUserEmail);
+          localStorage.setItem('budget_user_name', currentUserName);
+
+          document.getElementById('authModal').style.display = 'none';
+          document.getElementById('displayUserId').innerText = `${currentUserName} (${currentUserEmail})`;
+          loadUserLocalData();
+          renderTransactions();
+          fetchDataFromSheet();
+        } else {
+          alert(json.message || "काहीतरी चूक झाली!");
+        }
+      } catch (err) {
+        alert("सर्व्हरशी संपर्क होऊ शकला नाही. इंटरनेट तपासा!");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = authMode === 'login' ? 'लॉगिन करा' : 'नवीन खाते तयार करा';
+      }
+    }
+
+    function checkLogin() {
+      if (!currentUserEmail) {
+        document.getElementById('authModal').style.display = 'flex';
+      } else {
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('displayUserId').innerText = `${currentUserName} (${currentUserEmail})`;
+        loadUserLocalData();
+        renderTransactions();
+        if (navigator.onLine) {
+          fetchDataFromSheet();
+        } else {
+          setSyncBadge('offline');
+        }
+      }
+    }
+
+    function logoutUser() {
+      if (!confirm("तुम्हाला खात्यातून लॉगआउट करायचे आहे का?")) return;
+      localStorage.removeItem('budget_user_email');
+      localStorage.removeItem('budget_user_name');
+      location.reload();
+    }
+
+    function loadUserLocalData() {
+      try {
+        transactions = JSON.parse(localStorage.getItem('budget_data_' + currentUserEmail) || '[]');
+        pendingQueue = JSON.parse(localStorage.getItem('budget_pending_' + currentUserEmail) || '[]');
+        deleteQueue = JSON.parse(localStorage.getItem('budget_delete_' + currentUserEmail) || '[]');
+      } catch (e) {
+        transactions = []; pendingQueue = []; deleteQueue = [];
+      }
+    }
+
+    function saveUserLocalData() {
+      try {
+        localStorage.setItem('budget_data_' + currentUserEmail, JSON.stringify(transactions));
+        localStorage.setItem('budget_pending_' + currentUserEmail, JSON.stringify(pendingQueue));
+        localStorage.setItem('budget_delete_' + currentUserEmail, JSON.stringify(deleteQueue));
+      } catch (e) {}
+    }
+
     async function refreshApp() {
       const btn = document.getElementById('btnRefresh');
-      btn.innerText = '⏳...';
+      btn.innerText = '⏳';
       btn.disabled = true;
 
       resetToCurrentMonth();
@@ -266,66 +361,33 @@
       }
 
       setTimeout(() => {
-        btn.innerText = '🔄 रिफ्रेश';
+        btn.innerText = '🔄';
         btn.disabled = false;
       }, 600);
     }
 
-    function checkLogin() {
-      if (!currentUserId) {
-        document.getElementById('loginModal').style.display = 'flex';
-      } else {
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('displayUserId').innerText = currentUserId;
-        loadUserLocalData();
-        renderTransactions();
-        if (navigator.onLine) {
-          fetchDataFromSheet();
-        } else {
-          setSyncBadge('offline');
-        }
-      }
-    }
-
-    function performLogin() {
-      const phone = document.getElementById('userPhoneInput').value.trim();
-      if (!phone || phone.length < 4) {
-        alert("कृपया वैध नंबर टाका!");
+    // युझरच्या ईमेलवर थेट रिपोर्ट पाठवणे
+    async function sendReportToEmail() {
+      if (!navigator.onLine) {
+        alert("ईमेल पाठवण्यासाठी इंटरनेट चालू असणे आवश्यक आहे!");
         return;
       }
-      currentUserId = phone;
-      localStorage.setItem('budget_user_id', currentUserId);
-      document.getElementById('loginModal').style.display = 'none';
-      document.getElementById('displayUserId').innerText = currentUserId;
-      loadUserLocalData();
-      renderTransactions();
-      if (navigator.onLine) {
-        fetchDataFromSheet();
-      }
-    }
+      if (!confirm(`तुमचा संपूर्ण हिशोब रिपोर्ट '${currentUserEmail}' या ईमेलवर पाठवायचा का?`)) return;
 
-    function logoutUser() {
-      if (!confirm("लॉगआउट करायचे आहे का?")) return;
-      localStorage.removeItem('budget_user_id');
-      location.reload();
-    }
+      const btn = document.getElementById('btnEmailReport');
+      btn.innerText = '⏳...';
+      btn.disabled = true;
 
-    function loadUserLocalData() {
       try {
-        transactions = JSON.parse(localStorage.getItem('budget_data_' + currentUserId) || '[]');
-        pendingQueue = JSON.parse(localStorage.getItem('budget_pending_' + currentUserId) || '[]');
-        deleteQueue = JSON.parse(localStorage.getItem('budget_delete_' + currentUserId) || '[]');
+        const res = await fetch(`${SCRIPT_URL}?action=email_report&user_id=${encodeURIComponent(currentUserEmail)}`);
+        const json = await res.json();
+        alert(json.message);
       } catch (e) {
-        transactions = []; pendingQueue = []; deleteQueue = [];
+        alert("ईमेल पाठवताना त्रुटी आली. पुन्हा प्रयत्न करा.");
+      } finally {
+        btn.innerText = '📧 ईमेल';
+        btn.disabled = false;
       }
-    }
-
-    function saveUserLocalData() {
-      try {
-        localStorage.setItem('budget_data_' + currentUserId, JSON.stringify(transactions));
-        localStorage.setItem('budget_pending_' + currentUserId, JSON.stringify(pendingQueue));
-        localStorage.setItem('budget_delete_' + currentUserId, JSON.stringify(deleteQueue));
-      } catch (e) {}
     }
 
     function setSyncBadge(state) {
@@ -333,7 +395,7 @@
       if (state === 'syncing') {
         el.innerHTML = `<span class="badge-dot" style="background:#fbbf24;"></span> सिंक होत आहे...`;
       } else if (state === 'online') {
-        el.innerHTML = `<span class="badge-dot" style="background:#10b981;"></span> सर्व डेटा सिंक झाला`;
+        el.innerHTML = `<span class="badge-dot" style="background:#10b981;"></span> सुरक्षित आणि सिंक`;
       } else if (state === 'offline') {
         const count = pendingQueue.length + deleteQueue.length;
         el.innerHTML = `<span class="badge-dot" style="background:#f59e0b;"></span> ऑफलाइन (${count} पेंडिंग)`;
@@ -401,11 +463,11 @@
     }
 
     async function fetchDataFromSheet() {
-      if (!currentUserId || !navigator.onLine) return;
+      if (!currentUserEmail || !navigator.onLine) return;
       setSyncBadge('syncing');
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?action=fetch&user_id=${encodeURIComponent(currentUserId)}`);
+        const res = await fetch(`${SCRIPT_URL}?action=fetch&user_id=${encodeURIComponent(currentUserEmail)}`);
         const json = await res.json();
         
         if (json.status === "success" && json.data) {
@@ -414,7 +476,7 @@
           pendingQueue.forEach(item => existingMap.set(item.id, item));
 
           transactions = Array.from(existingMap.values());
-          transactions.sort((a, b) => normalizeDate(b.date).localeCompare(normalizeDate(a.date)));
+          transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
           saveUserLocalData();
           renderTransactions();
@@ -427,7 +489,7 @@
     }
 
     async function triggerSync() {
-      if (isSyncing || !currentUserId || !navigator.onLine) return;
+      if (isSyncing || !currentUserEmail || !navigator.onLine) return;
       if (pendingQueue.length === 0 && deleteQueue.length === 0) {
         setSyncBadge('online');
         return;
@@ -449,7 +511,7 @@
 
         if (pendingQueue.length > 0) {
           const payload = encodeURIComponent(JSON.stringify(pendingQueue));
-          const syncUrl = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserId)}&data=${payload}`;
+          const syncUrl = `${SCRIPT_URL}?action=sync&user_id=${encodeURIComponent(currentUserEmail)}&data=${payload}`;
           
           await fetch(syncUrl, {
             method: 'GET',
@@ -486,80 +548,70 @@
       const historyTitle = document.getElementById('historyTitle');
       if (!startDate && !endDate) {
         historyTitle.innerText = "सर्व नोंदींचा इतिहास (All Time)";
-      } else if (startDate && endDate && startDate === endDate) {
-        historyTitle.innerText = `निवडलेल्या तारखेचा इतिहास (${startDate})`;
       } else {
         historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
       }
 
-      // 1. एकूण शिल्लक (Lifetime) मोजणी
       let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0;
       transactions.forEach(t => {
-        const amt = Number(t.amount) || 0;
-        if (t.type === 'income') lifetimeIncome += amt;
-        else if (t.type === 'expense') lifetimeExpense += amt;
-        else if (t.type === 'saving') lifetimeSaving += amt;
+        if (t.type === 'income') lifetimeIncome += t.amount;
+        else if (t.type === 'expense') lifetimeExpense += t.amount;
+        else if (t.type === 'saving') lifetimeSaving += t.amount;
       });
       const lifetimeNetBalance = lifetimeIncome - (lifetimeExpense + lifetimeSaving);
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
 
-      // 2. From Date ते To Date (दोन्ही तारखा धरून) फिल्टर
       const dateFiltered = transactions.filter(t => {
-        const txDate = normalizeDate(t.date);
-        if (!txDate) return false;
-        if (startDate && txDate < startDate) return false;
-        if (endDate && txDate > endDate) return false;
-        return true;
+        let matchDate = true;
+        if (startDate && t.date < startDate) matchDate = false;
+        if (endDate && t.date > endDate) matchDate = false;
+        return matchDate;
       });
 
-      // 3. निवडलेल्या तारखांचा हिशोब कार्ड्सवर दाखवणे
-      let periodIncome = 0, periodExpense = 0, periodSaving = 0;
+      let rangeIncome = 0, rangeExpense = 0, rangeSaving = 0;
       dateFiltered.forEach(t => {
-        const amt = Number(t.amount) || 0;
-        if (t.type === 'income') periodIncome += amt;
-        else if (t.type === 'expense') periodExpense += amt;
-        else if (t.type === 'saving') periodSaving += amt;
-      });
-      const periodBalance = periodIncome - (periodExpense + periodSaving);
-
-      document.getElementById('totalBalance').innerText = `₹${periodBalance.toLocaleString('en-IN')}`;
-      document.getElementById('totalSavings').innerText = `₹${periodSaving.toLocaleString('en-IN')}`;
-      document.getElementById('totalIncome').innerText = `₹${periodIncome.toLocaleString('en-IN')}`;
-      document.getElementById('totalExpense').innerText = `₹${periodExpense.toLocaleString('en-IN')}`;
-
-      // 4. सर्च आणि प्रकार (Type) फिल्टर
-      const finalFiltered = dateFiltered.filter(t => {
-        const matchesType = (typeFilter === 'all' || t.type === typeFilter);
-        const matchesSearch = !search || 
-          (t.notes && t.notes.toLowerCase().includes(search)) || 
-          (t.category && t.category.toLowerCase().includes(search)) ||
-          (t.mode && t.mode.toLowerCase().includes(search));
-        return matchesType && matchesSearch;
+        if (t.type === 'income') rangeIncome += t.amount;
+        else if (t.type === 'expense') rangeExpense += t.amount;
+        else if (t.type === 'saving') rangeSaving += t.amount;
       });
 
-      // 5. यादी स्क्रीनवर दाखवणे
-      const listEl = document.getElementById('txList');
-      if (finalFiltered.length === 0) {
-        listEl.innerHTML = `<div class="card" style="text-align: center; color: #64748b; font-size: 13px; padding: 24px;">निवडलेल्या काळात कोणतीही नोंद आढळली नाही.</div>`;
+      const rangeNetBalance = rangeIncome - (rangeExpense + rangeSaving);
+      const balEl = document.getElementById('totalBalance');
+      balEl.innerText = `₹${rangeNetBalance.toLocaleString('en-IN')}`;
+      balEl.style.color = rangeNetBalance >= 0 ? '#2563eb' : '#ef4444';
+
+      document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
+      document.getElementById('totalExpense').innerText = `₹${rangeExpense.toLocaleString('en-IN')}`;
+      document.getElementById('totalSavings').innerText = `₹${rangeSaving.toLocaleString('en-IN')}`;
+
+      const listFiltered = dateFiltered.filter(t => {
+        const matchSearch = (t.category + t.notes + t.mode + t.amount).toLowerCase().includes(search);
+        const matchType = typeFilter === 'all' || t.type === typeFilter;
+        return matchSearch && matchType;
+      });
+
+      const container = document.getElementById('txList');
+      if (listFiltered.length === 0) {
+        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">या कालावधीत कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
         return;
       }
 
-      listEl.innerHTML = finalFiltered.map(t => {
-        const isInc = t.type === 'income';
-        const isSav = t.type === 'saving';
-        const color = isInc ? '#10b981' : (isSav ? '#4f46e5' : '#ef4444');
-        const sign = isInc ? '+' : '-';
-        const cleanDate = normalizeDate(t.date);
+      container.innerHTML = listFiltered.map(t => {
+        let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
+        if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
+        else if (t.type === 'saving') { badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक'; }
 
         return `
           <div class="tx-item">
             <div>
-              <div class="tx-notes">${t.notes || t.category}</div>
-              <div class="tx-sub">${cleanDate} • ${t.category} • ${t.mode}</div>
+              <p class="tx-notes">${t.notes}</p>
+              <p class="tx-sub">${t.date} • ${t.mode} • <strong>${typeBadge}</strong> • ${t.category}</p>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <strong style="color: ${color}; font-size: 15px;">${sign}₹${Number(t.amount).toLocaleString('en-IN')}</strong>
-              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')" title="हटवा">🗑️</button>
+              <span style="font-size: 14px; font-weight: bold; color: ${badgeColor};">
+                ${sign} ₹${t.amount.toLocaleString('en-IN')}
+              </span>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
             </div>
           </div>
         `;
@@ -567,44 +619,32 @@
     }
 
     function downloadCSVReport() {
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-
-      const filtered = transactions.filter(t => {
-        const txDate = normalizeDate(t.date);
-        if (!txDate) return false;
-        if (startDate && txDate < startDate) return false;
-        if (endDate && txDate > endDate) return false;
-        return true;
+      if (transactions.length === 0) { alert("नोंद उपलब्ध नाही!"); return; }
+      let csv = "ID,Tariqh,Prakar,Vargawari,Rakkam,Madhyam,Tip\n";
+      transactions.forEach(t => {
+        csv += `"${t.id}","${t.date}","${t.type}","${t.category}","${t.amount}","${t.mode}","${t.notes.replace(/"/g, '""')}"\n`;
       });
-
-      if (filtered.length === 0) {
-        alert("डाउनलोड करण्यासाठी निवडलेल्या काळात कोणताही डेटा नाही!");
-        return;
-      }
-
-      let csv = "\uFEFFतारीख,प्रकार,वर्गवारी,माध्यम,तपशील,रक्कम\n";
-      filtered.forEach(t => {
-        const typeLabel = t.type === 'income' ? 'जमा' : (t.type === 'saving' ? 'गुंतवणूक' : 'खर्च');
-        const cleanNote = (t.notes || '').replace(/,/g, ' ');
-        csv += `${normalizeDate(t.date)},${typeLabel},${t.category},${t.mode},${cleanNote},${t.amount}\n`;
-      });
-
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `Budget_Report_${startDate || 'Start'}_to_${endDate || 'All'}.csv`;
+      a.href = URL.createObjectURL(blob);
+      a.download = `Budget_Report_${currentUserEmail}.csv`;
       a.click();
-      URL.revokeObjectURL(url);
     }
 
-    window.addEventListener('online', () => { triggerSync(); });
-    window.addEventListener('offline', () => { setSyncBadge('offline'); });
+    window.addEventListener('online', fetchDataFromSheet);
+    window.addEventListener('offline', () => setSyncBadge('offline'));
 
     setType('expense');
     setDefaultCurrentMonth();
     checkLogin();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Offline Support Ready:', reg.scope))
+          .catch((err) => console.log('Offline Support Failed:', err));
+      });
+    }
   </script>
 </body>
 </html>
