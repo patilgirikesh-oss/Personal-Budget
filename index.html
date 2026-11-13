@@ -24,11 +24,13 @@
     .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; }
     .val-text { font-size: 19px; font-weight: 900; margin-top: 4px; }
     .lbl-text { font-size: 11px; color: #64748b; font-weight: 600; }
     .form-group { margin-bottom: 10px; }
-    input, select { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; outline: none; }
-    input:focus, select:focus { border-color: #2563eb; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; outline: none; font-family: inherit; }
+    input:focus, select:focus, textarea:focus { border-color: #2563eb; }
+    textarea { resize: vertical; min-height: 62px; }
     .type-btn { padding: 8px 4px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; }
     .type-btn.active-exp { background: #ef4444; color: #fff; border-color: #ef4444; }
     .type-btn.active-inc { background: #10b981; color: #fff; border-color: #10b981; }
@@ -41,9 +43,10 @@
 
     .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn-submit:active { transform: scale(0.98); }
-    .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
+    .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
     .tx-notes { font-size: 14px; font-weight: bold; color: #0f172a; }
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
+    .tx-reason-box { font-size: 12px; color: #334155; background: #f8fafc; border-left: 3px solid #cbd5e1; padding: 5px 8px; border-radius: 4px; margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
     .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
     .tx-del:hover { color: #ef4444; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.88); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -58,12 +61,18 @@
     .drawer-btn { width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 13px; font-weight: bold; color: #0f172a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
     .drawer-btn:active { transform: scale(0.98); background: #eff6ff; border-color: #93c5fd; }
 
-    /* उधारी बटणे */
+    /* उधारी बटणे आणि साधे फिल्टर टॅब्स */
     .udhar-type-btn { padding: 9px 6px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; }
     .udhar-type-btn.active-give { background: #10b981; color: #fff; border-color: #10b981; }
     .udhar-type-btn.active-take { background: #ef4444; color: #fff; border-color: #ef4444; }
-    .btn-settle { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
-    .btn-settle:active { transform: scale(0.95); }
+    .btn-part { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; padding: 4px 7px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .btn-settle { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; padding: 4px 7px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .btn-part:active, .btn-settle:active { transform: scale(0.95); }
+    .pill-tab { padding: 7px 4px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 11px; font-weight: bold; color: #475569; text-align: center; cursor: pointer; }
+    .pill-tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .person-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+    .person-row:last-child { border-bottom: none; }
+    .person-row:active { background: #f8fafc; }
   </style>
 </head>
 <body>
@@ -76,7 +85,6 @@
       <button type="button" onclick="closeFilterDrawer()" style="background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
     </div>
 
-    <!-- मुख्य बजेट डॅशबोर्ड आणि उधारी खाते स्विच बटणे -->
     <button type="button" onclick="switchView('budget'); closeFilterDrawer();" class="drawer-btn" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
       <span>💰 मुख्य बजेट (खर्च / जमा)</span>
       <span>›</span>
@@ -90,7 +98,6 @@
     <div style="border-top: 1px solid #e2e8f0; margin: 4px 0;"></div>
     <p class="lbl-text">फिल्टर पर्याय (बजेटसाठी)</p>
 
-    <!-- तारीख फिल्टर पॉप-अप उघडणारे बटण -->
     <button type="button" onclick="openDateFilterModal()" class="drawer-btn">
       <span>📅 तारीख निवडा (From - To)</span>
       <span>›</span>
@@ -118,6 +125,20 @@
     </div>
   </aside>
 
+  <!-- एका क्लिकवर कोणाचे किती बाकी हे दाखवणारा पॉप-अप (Person-wise Summary Modal) -->
+  <div id="personSummaryModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closePersonSummaryModal()">
+    <div class="card" style="width: 100%; max-width: 380px; max-height: 82vh; display: flex; flex-direction: column; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
+        <div>
+          <h3 style="font-size: 16px; font-weight: bold; color: #0f172a;">👥 कोणाचे किती बाकी?</h3>
+          <p style="font-size: 11px; color: #64748b;">व्यक्तीच्या नावावर क्लिक केल्यास त्याच्या नोंदी दिसतील</p>
+        </div>
+        <button type="button" onclick="closePersonSummaryModal()" style="background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
+      </div>
+      <div id="personSummaryList" style="overflow-y: auto; flex: 1;"></div>
+    </div>
+  </div>
+
   <!-- From Date आणि To Date साठी स्वतंत्र पॉप-अप -->
   <div id="dateFilterModal" class="modal-overlay" style="display: none;">
     <div class="card" style="width: 100%; max-width: 350px; padding: 20px;">
@@ -139,6 +160,35 @@
       <div class="grid-2">
         <button type="button" onclick="resetToCurrentMonth(); closeDateFilterModal();" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">चालू महिना</button>
         <button type="button" onclick="applyDateFilterModal()" style="padding: 10px; border-radius: 9px; border: none; background: #2563eb; font-weight: bold; color: #fff; cursor: pointer;">लागू करा</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- उधारी जमा / अंशतः परतफेड पॉप-अप -->
+  <div id="settleModal" class="modal-overlay" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 360px; text-align: center; padding: 20px;">
+      <div id="settleModalIcon" style="font-size: 32px; margin-bottom: 6px;">💵</div>
+      <h3 id="settleModalTitle" style="font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 4px;">उधारी जमा / परतफेड नोंद</h3>
+      <p id="settleInfoText" style="font-size: 12px; color: #64748b; margin-bottom: 14px;">तपशील प्रविष्ट करा</p>
+      
+      <div style="text-align: left; margin-bottom: 10px;">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">जमा / दिलेली रक्कम (₹)</label>
+        <input type="number" id="settleAmountInput" placeholder="0" style="font-weight: bold; font-size: 16px; border-color: #2563eb;">
+      </div>
+
+      <div style="text-align: left; margin-bottom: 10px;">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">जमा / परतफेड तारीख निवडा</label>
+        <input type="date" id="settleDateInput">
+      </div>
+
+      <div style="text-align: left; margin-bottom: 14px;">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">परतफेड टीप / माध्यम (ऐच्छिक)</label>
+        <input type="text" id="settleNoteInput" placeholder="उदा. ₹200 GPay ने परत केले, उरलेले पुढच्या महिन्यात...">
+      </div>
+
+      <div class="grid-2">
+        <button type="button" onclick="closeSettleModal()" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">रद्द करा</button>
+        <button type="button" onclick="confirmSettleUdhar()" style="padding: 10px; border-radius: 9px; border: none; background: #10b981; font-weight: bold; color: #fff; cursor: pointer;">नोंद सेव्ह करा</button>
       </div>
     </div>
   </div>
@@ -214,15 +264,14 @@
       </div>
     </div>
 
-    <!-- 🔎 त्वरित सर्च बॉक्स (बजेट आणि उधारी दोन्हीसाठी काम करेल) -->
+    <!-- 🔎 त्वरित सर्च बॉक्स -->
     <div id="quickSearchBox" style="display: none; position: relative;">
-      <input type="text" id="searchInput" oninput="handleSearchInput()" placeholder="काहीही शोधा (नाव, किराणा, SIP)..." style="padding-right: 34px; border-color: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,0.1);">
+      <input type="text" id="searchInput" oninput="handleSearchInput()" placeholder="काहीही शोधा (नाव, कारण, किराणा, SIP)..." style="padding-right: 34px; border-color: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,0.1);">
       <button type="button" onclick="clearQuickSearch()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 14px; color: #64748b; cursor: pointer; padding: 4px;">✕</button>
     </div>
 
     <!-- ==================== विभाग १: मुख्य बजेट (BUDGET SECTION) ==================== -->
     <div id="budgetSection" style="display: flex; flex-direction: column; gap: 12px;">
-      <!-- १. खर्च, जमा, गुंतवणूक नोंद फॉर्म -->
       <form id="entryForm" onsubmit="handleFormSubmit(event)" class="card">
         <div class="grid-3" style="margin-bottom: 10px;">
           <div id="btnTypeExp" class="type-btn active-exp" onclick="setType('expense')">खर्च</div>
@@ -269,15 +318,15 @@
         <button type="submit" id="btnSubmitForm" class="btn-submit">नोंद सेव्ह करा</button>
       </form>
 
-      <!-- २. हिशोब कार्ड्स -->
+      <!-- हिशोब कार्ड्स -->
       <div class="grid-2">
         <div class="card">
-          <p class="lbl-text">शिल्लक (Balance)</p>
+          <p class="lbl-text">शिल्लक (निवडलेला काळ)</p>
           <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण शिल्लक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
         </div>
         <div class="card">
-          <p class="lbl-text">गुंतवणूक (Savings)</p>
+          <p class="lbl-text">निव्वळ गुंतवणूक (Savings)</p>
           <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण गुंतवणूक: <strong id="lifetimeSavingsText" style="color: #0f172a;">₹0</strong></p>
         </div>
@@ -291,7 +340,7 @@
         </div>
       </div>
 
-      <!-- ३. इतिहास -->
+      <!-- इतिहास -->
       <div>
         <h2 id="historyTitle" style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">चालू महिन्याचा इतिहास</h2>
         <div id="txList"></div>
@@ -300,20 +349,20 @@
 
     <!-- ==================== विभाग २: उधारी खाते (UDHAR BOOK SECTION) ==================== -->
     <div id="udharSection" style="display: none; flex-direction: column; gap: 12px;">
-      <!-- परत मुख्य बजेटवर जाण्याची पट्टी -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #fef3c7; border: 1px solid #fde68a; padding: 8px 12px; border-radius: 10px;">
-        <span style="font-size: 12px; font-weight: bold; color: #92400e;">📒 स्वतंत्र उधारी खाते</span>
-        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #f59e0b; color: #b45309; padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
+      <!-- वरची पट्टी: एका क्लिकवर कोणाचे किती बाकी पाहण्यासाठी बटण + बजेटवर परत जा -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #fef3c7; border: 1px solid #fde68a; padding: 8px 10px; border-radius: 10px; gap: 6px;">
+        <button type="button" onclick="openPersonSummaryModal()" style="background: #d97706; color: #fff; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">👥 कोणाचे किती बाकी?</button>
+        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #f59e0b; color: #b45309; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
       </div>
 
       <!-- येणे बाकी आणि देणे बाकी कार्ड्स -->
       <div class="grid-2">
-        <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="card" style="border-left: 4px solid #10b981; cursor: pointer;" onclick="setUdharPillFilter('give_pending')">
           <p class="lbl-text">येणे बाकी (To Receive)</p>
           <p id="udharToReceive" class="val-text" style="color: #10b981;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 2px;">तुम्ही इतरांना दिलेले</p>
         </div>
-        <div class="card" style="border-left: 4px solid #ef4444;">
+        <div class="card" style="border-left: 4px solid #ef4444; cursor: pointer;" onclick="setUdharPillFilter('take_pending')">
           <p class="lbl-text">देणे बाकी (To Pay)</p>
           <p id="udharToPay" class="val-text" style="color: #ef4444;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 2px;">तुम्ही इतरांकडून घेतलेले</p>
@@ -338,29 +387,27 @@
           </div>
         </div>
 
-        <div class="grid-2 form-group">
-          <div>
-            <label class="lbl-text">तारीख</label>
-            <input type="date" id="udharDate" required>
-          </div>
-          <div>
-            <label class="lbl-text">कारण / टीप</label>
-            <input type="text" id="udharNote" placeholder="उदा. उसनवार, दुकान...">
-          </div>
+        <div class="form-group">
+          <label class="lbl-text">तारीख</label>
+          <input type="date" id="udharDate" required>
+        </div>
+
+        <div class="form-group">
+          <label class="lbl-text">सविस्तर कारण / टीप (Note)</label>
+          <textarea id="udharNote" rows="2" placeholder="उदा. गाडी दुरुस्तीसाठी उसनवार दिले, पुढील महिन्यात परत देणार..."></textarea>
         </div>
 
         <button type="submit" id="btnUdharSubmit" class="btn-submit" style="background: #10b981;">उधारी नोंद सेव्ह करा</button>
       </form>
 
-      <!-- उधारी फिल्टर आणि यादी -->
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">उधारी यादी</h2>
-        <select id="udharStatusFilter" onchange="renderUdharList()" style="width: auto; padding: 5px 8px; font-size: 11px;">
-          <option value="pending">फक्त बाकी (Pending)</option>
-          <option value="settled">चुकती झालेली (Settled)</option>
-          <option value="all">सर्व उधारी</option>
-        </select>
+      <!-- साधे १-क्लिक उधारी फिल्टर टॅब्स -->
+      <div class="grid-4">
+        <div id="pillPending" class="pill-tab active" onclick="setUdharPillFilter('pending')">सर्व बाकी</div>
+        <div id="pillGive" class="pill-tab" onclick="setUdharPillFilter('give_pending')">येणे बाकी</div>
+        <div id="pillTake" class="pill-tab" onclick="setUdharPillFilter('take_pending')">देणे बाकी</div>
+        <div id="pillSettled" class="pill-tab" onclick="setUdharPillFilter('settled')">चुकती</div>
       </div>
+
       <div id="udharList"></div>
     </div>
   </main>
@@ -372,22 +419,23 @@
     const incomeCategories = ["पगार (Salary)", "लाभांश (Dividend)", "भाडे", "व्याज", "इतर जमा"];
     const savingCategories = ["Mutual Fund / SIP", "शेअर्स (Stocks)", "FD / RD", "सोने (Gold)", "PPF / PF", "विमा (Insurance/LIC)", "इतर बचत"];
 
-    let currentView = 'budget'; // 'budget' किंवा 'udhar'
+    let currentView = 'budget';
     let selectedType = 'expense';
-    let selectedUdharType = 'udhar_give'; // 'udhar_give' किंवा 'udhar_take'
+    let selectedUdharType = 'udhar_give';
+    let udharPillFilter = 'pending';
     let authMode = 'login';
 
     let currentUserEmail = localStorage.getItem('budget_user_email') || '';
     let currentUserName = localStorage.getItem('budget_user_name') || '';
     let currentUserPass = localStorage.getItem('budget_user_pass') || '';
     let pendingDeleteId = null;
+    let pendingSettleId = null;
 
     let transactions = [];
     let pendingQueue = [];
     let deleteQueue = [];
     let isSyncing = false;
 
-    // विभाग बदलणे: मुख्य बजेट किंवा उधारी खाते
     function switchView(view) {
       currentView = view;
       const budgetSec = document.getElementById('budgetSection');
@@ -738,7 +786,7 @@
       }
     }
 
-    // ==================== उधारी खाते लॉजिक (Udhar Book Logic) ====================
+    // ==================== उधारी खाते लॉजिक ====================
     function setUdharType(type) {
       selectedUdharType = type;
       document.getElementById('btnUdharGive').className = 'udhar-type-btn' + (type === 'udhar_give' ? ' active-give' : '');
@@ -746,20 +794,29 @@
       document.getElementById('btnUdharSubmit').style.background = (type === 'udhar_give') ? '#10b981' : '#ef4444';
     }
 
+    function setUdharPillFilter(mode) {
+      udharPillFilter = mode;
+      document.getElementById('pillPending').className = 'pill-tab' + (mode === 'pending' ? ' active' : '');
+      document.getElementById('pillGive').className = 'pill-tab' + (mode === 'give_pending' ? ' active' : '');
+      document.getElementById('pillTake').className = 'pill-tab' + (mode === 'take_pending' ? ' active' : '');
+      document.getElementById('pillSettled').className = 'pill-tab' + (mode === 'settled' ? ' active' : '');
+      renderUdharList();
+    }
+
     function handleUdharSubmit(e) {
       e.preventDefault();
       const person = document.getElementById('udharPerson').value.trim();
       const amount = parseFloat(document.getElementById('udharAmount').value);
       const date = document.getElementById('udharDate').value;
-      const note = document.getElementById('udharNote').value.trim() || (selectedUdharType === 'udhar_give' ? 'उधार दिले' : 'उधार घेतले');
+      const note = document.getElementById('udharNote').value.trim() || '';
 
       const record = {
         id: "UD_" + Date.now(),
         date: date,
-        type: selectedUdharType, // 'udhar_give' किंवा 'udhar_take'
-        category: person, // व्यक्तीचे नाव category मध्ये साठवले जाईल (शीट सुसंगततेसाठी)
+        type: selectedUdharType,
+        category: person,
         amount: amount,
-        mode: 'Pending', // 'Pending' किंवा 'Settled'
+        mode: 'Pending',
         notes: note
       };
 
@@ -779,21 +836,153 @@
       }
     }
 
-    // उधारी चुकती करणे (Settle Udhar)
-    function settleUdhar(id) {
-      const idx = transactions.findIndex(t => t.id === id);
+    function parseUdharStatus(t) {
+      const m = t.mode || 'Pending';
+      if (m.startsWith('Settled')) {
+        const dt = m.includes(':') ? m.split(':')[1] : '';
+        return { isSettled: true, paid: t.amount, remaining: 0, lastDate: dt };
+      }
+      if (m.startsWith('Part:')) {
+        const parts = m.split(':');
+        const paid = parseFloat(parts[1]) || 0;
+        const dt = parts[2] || '';
+        const rem = Math.max(0, t.amount - paid);
+        return { isSettled: rem === 0, paid: paid, remaining: rem, lastDate: dt };
+      }
+      return { isSettled: false, paid: 0, remaining: t.amount, lastDate: '' };
+    }
+
+    // एका क्लिकवर कोणाचे किती बाकी हे दाखवणारा पॉप-अप
+    function openPersonSummaryModal() {
+      const udharAll = transactions.filter(t => t.type === 'udhar_give' || t.type === 'udhar_take');
+      const personMap = new Map();
+
+      udharAll.forEach(t => {
+        const st = parseUdharStatus(t);
+        if (st.isSettled || st.remaining <= 0) return;
+
+        const key = (t.category || 'इतर').trim().toLowerCase();
+        if (!personMap.has(key)) {
+          personMap.set(key, { name: t.category.trim(), receive: 0, pay: 0 });
+        }
+        const entry = personMap.get(key);
+        if (t.type === 'udhar_give') entry.receive += st.remaining;
+        else if (t.type === 'udhar_take') entry.pay += st.remaining;
+      });
+
+      const listContainer = document.getElementById('personSummaryList');
+      const people = Array.from(personMap.values());
+
+      if (people.length === 0) {
+        listContainer.innerHTML = `<div style="text-align: center; padding: 24px 10px; font-size: 13px; color: #64748b;">🎉 कोणाचीही उधारी बाकी नाही!</div>`;
+      } else {
+        listContainer.innerHTML = people.map(p => {
+          const net = p.receive - p.pay; // धन (+) म्हणजे येणे बाकी, ऋण (-) म्हणजे देणे बाकी
+          let statusHtml = '';
+          if (net > 0) {
+            statusHtml = `<div style="text-align: right;">
+                            <span style="font-size: 15px; font-weight: 900; color: #10b981;">₹${net.toLocaleString('en-IN')}</span>
+                            <div style="font-size: 10px; font-weight: bold; color: #059669;">येणे बाकी (Receive)</div>
+                          </div>`;
+          } else if (net < 0) {
+            statusHtml = `<div style="text-align: right;">
+                            <span style="font-size: 15px; font-weight: 900; color: #ef4444;">₹${Math.abs(net).toLocaleString('en-IN')}</span>
+                            <div style="font-size: 10px; font-weight: bold; color: #dc2626;">देणे बाकी (Pay)</div>
+                          </div>`;
+          } else {
+            statusHtml = `<span style="font-size: 12px; font-weight: bold; color: #64748b;">₹0 (हिशोब बराबर)</span>`;
+          }
+
+          return `
+            <div class="person-row" onclick="filterByPerson('${p.name.replace(/'/g, "\\'")}')">
+              <div>
+                <p style="font-size: 14px; font-weight: bold; color: #0f172a;">👤 ${p.name}</p>
+                ${p.receive > 0 && p.pay > 0 ? `<p style="font-size: 10px; color: #64748b;">येणे: ₹${p.receive} | देणे: ₹${p.pay}</p>` : ''}
+              </div>
+              ${statusHtml}
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('personSummaryModal').style.display = 'flex';
+    }
+
+    function closePersonSummaryModal() {
+      document.getElementById('personSummaryModal').style.display = 'none';
+    }
+
+    function filterByPerson(personName) {
+      closePersonSummaryModal();
+      setUdharPillFilter('pending');
+      document.getElementById('quickSearchBox').style.display = 'block';
+      document.getElementById('searchInput').value = personName;
+      renderUdharList();
+    }
+
+    function openSettleModal(id, isFull) {
+      const item = transactions.find(t => t.id === id);
+      if (!item) return;
+      const st = parseUdharStatus(item);
+
+      pendingSettleId = id;
+      document.getElementById('settleModalIcon').innerText = isFull ? '✅' : '💵';
+      document.getElementById('settleModalTitle').innerText = isFull ? 'पूर्ण उधारी चुकती (जमा)' : 'अंशतः रक्कम जमा / परतफेड';
+      document.getElementById('settleInfoText').innerText = `'${item.category}' — एकूण: ₹${item.amount.toLocaleString('en-IN')} | बाकी: ₹${st.remaining.toLocaleString('en-IN')}`;
+      
+      const amtInput = document.getElementById('settleAmountInput');
+      amtInput.value = isFull ? st.remaining : '';
+      amtInput.max = st.remaining;
+
+      document.getElementById('settleDateInput').value = getLocalDateString(new Date());
+      document.getElementById('settleNoteInput').value = '';
+      document.getElementById('settleModal').style.display = 'flex';
+      if (!isFull) setTimeout(() => amtInput.focus(), 100);
+    }
+
+    function closeSettleModal() {
+      pendingSettleId = null;
+      document.getElementById('settleModal').style.display = 'none';
+    }
+
+    function confirmSettleUdhar() {
+      if (!pendingSettleId) return;
+      const payAmt = parseFloat(document.getElementById('settleAmountInput').value);
+      const settleDate = document.getElementById('settleDateInput').value;
+      const settleNote = document.getElementById('settleNoteInput').value.trim();
+
+      const idx = transactions.findIndex(t => t.id === pendingSettleId);
       if (idx === -1) return;
+
       const item = transactions[idx];
-      if (!confirm(`'${item.category}' यांची ₹${item.amount.toLocaleString('en-IN')} ची उधारी चुकती (पूर्ण) झाली का?`)) return;
+      const st = parseUdharStatus(item);
 
-      // जुनी नोंद डिलीट क्यूमध्ये टाकून 'Settled' स्थितीसह अपडेट करणे (शीटवरही अचूक राहण्यासाठी)
-      const settledRecord = { ...item, mode: 'Settled' };
-      transactions[idx] = settledRecord;
+      if (!payAmt || payAmt <= 0 || payAmt > st.remaining) {
+        alert(`कृपया ₹१ ते ₹${st.remaining.toLocaleString('en-IN')} च्या दरम्यान वैध रक्कम टाका!`);
+        return;
+      }
+      if (!settleDate) {
+        alert("कृपया जमा झाल्याची तारीख निवडा!");
+        return;
+      }
 
-      pendingQueue = pendingQueue.filter(t => t.id !== id);
-      deleteQueue.push(id);
-      pendingQueue.push(settledRecord);
+      const newTotalPaid = st.paid + payAmt;
+      const newRemaining = item.amount - newTotalPaid;
+      const newMode = (newRemaining <= 0)
+        ? `Settled:${settleDate}`
+        : `Part:${newTotalPaid}:${settleDate}`;
 
+      const logLine = `₹${payAmt.toLocaleString('en-IN')} जमा (${settleDate})${settleNote ? ' - ' + settleNote : ''}`;
+      const updatedNotes = item.notes ? `${item.notes}\n• ${logLine}` : `• ${logLine}`;
+
+      const updatedRecord = { ...item, mode: newMode, notes: updatedNotes };
+      transactions[idx] = updatedRecord;
+
+      pendingQueue = pendingQueue.filter(t => t.id !== pendingSettleId);
+      deleteQueue.push(pendingSettleId);
+      pendingQueue.push(updatedRecord);
+
+      closeSettleModal();
       saveUserLocalData();
       renderUdharList();
 
@@ -806,16 +995,14 @@
 
     function renderUdharList() {
       const search = (document.getElementById('searchInput').value || '').toLowerCase();
-      const statusFilter = document.getElementById('udharStatusFilter').value;
-
       const udharAll = transactions.filter(t => t.type === 'udhar_give' || t.type === 'udhar_take');
 
-      // येणे बाकी आणि देणे बाकी हिशोब (फक्त Pending नोंदींचा)
       let toReceive = 0, toPay = 0;
       udharAll.forEach(t => {
-        if (t.mode !== 'Settled') {
-          if (t.type === 'udhar_give') toReceive += t.amount;
-          else if (t.type === 'udhar_take') toPay += t.amount;
+        const st = parseUdharStatus(t);
+        if (!st.isSettled) {
+          if (t.type === 'udhar_give') toReceive += st.remaining;
+          else if (t.type === 'udhar_take') toPay += st.remaining;
         }
       });
 
@@ -823,10 +1010,12 @@
       document.getElementById('udharToPay').innerText = `₹${toPay.toLocaleString('en-IN')}`;
 
       const filtered = udharAll.filter(t => {
-        const isSettled = (t.mode === 'Settled');
-        if (statusFilter === 'pending' && isSettled) return false;
-        if (statusFilter === 'settled' && !isSettled) return false;
-        return (t.category + t.notes + t.amount).toLowerCase().includes(search);
+        const st = parseUdharStatus(t);
+        if (udharPillFilter === 'pending' && st.isSettled) return false;
+        if (udharPillFilter === 'give_pending' && (st.isSettled || t.type !== 'udhar_give')) return false;
+        if (udharPillFilter === 'take_pending' && (st.isSettled || t.type !== 'udhar_take')) return false;
+        if (udharPillFilter === 'settled' && !st.isSettled) return false;
+        return (t.category + (t.notes || '') + t.amount).toLowerCase().includes(search);
       });
 
       const container = document.getElementById('udharList');
@@ -837,22 +1026,47 @@
 
       container.innerHTML = filtered.map(t => {
         const isGive = (t.type === 'udhar_give');
-        const isSettled = (t.mode === 'Settled');
-        const badgeColor = isSettled ? '#64748b' : (isGive ? '#10b981' : '#ef4444');
-        const typeLabel = isGive ? '📤 येणे बाकी' : '📥 देणे बाकी';
+        const st = parseUdharStatus(t);
+        
+        const badgeColor = st.isSettled ? '#64748b' : (isGive ? '#10b981' : '#ef4444');
+        const typeLabel = isGive ? '📤 उधार दिले' : '📥 उधार घेतले';
+
+        let dateDisplay = `दिले: ${t.date}`;
+        if (st.isSettled) {
+          dateDisplay = `दिले: ${t.date} • <strong style="color:#059669;">पूर्ण जमा: ${st.lastDate || 'होय'}</strong>`;
+        } else if (st.paid > 0) {
+          dateDisplay = `दिले: ${t.date} • <strong style="color:#1d4ed8;">₹${st.paid.toLocaleString('en-IN')} जमा (${st.lastDate})</strong>`;
+        }
+
+        const noteHtml = (t.notes && t.notes.trim())
+          ? `<div class="tx-reason-box">📝 ${t.notes}</div>`
+          : '';
+
+        const amountHtml = st.isSettled
+          ? `<div style="font-size: 14px; font-weight: bold; color: #64748b;">₹${t.amount.toLocaleString('en-IN')}</div>`
+          : (st.paid > 0
+              ? `<div style="font-size: 14px; font-weight: 900; color: ${badgeColor};">बाकी: ₹${st.remaining.toLocaleString('en-IN')}</div>
+                 <div style="font-size: 10px; color: #64748b;">एकूण: ₹${t.amount.toLocaleString('en-IN')}</div>`
+              : `<div style="font-size: 14px; font-weight: bold; color: ${badgeColor};">₹${t.amount.toLocaleString('en-IN')}</div>`);
+
+        const actionBtns = !st.isSettled
+          ? `<div style="display: flex; gap: 4px; margin-top: 5px; justify-content: flex-end;">
+               <button type="button" class="btn-part" onclick="openSettleModal('${t.id}', false)" title="काही रक्कम जमा करा">💵 काही रक्कम</button>
+               <button type="button" class="btn-settle" onclick="openSettleModal('${t.id}', true)" title="संपूर्ण रक्कम चुकती करा">✅ पूर्ण</button>
+             </div>`
+          : '';
 
         return `
-          <div class="tx-item" style="${isSettled ? 'opacity: 0.65; background: #f8fafc;' : ''}">
-            <div>
-              <p class="tx-notes">${t.category} ${isSettled ? '<span style="font-size:10px; background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px;">चुकती झाले</span>' : ''}</p>
-              <p class="tx-sub">${t.date} • <strong>${typeLabel}</strong> • ${t.notes}</p>
+          <div class="tx-item" style="${st.isSettled ? 'opacity: 0.82; background: #f8fafc;' : ''}">
+            <div style="flex: 1; min-width: 0;">
+              <p class="tx-notes">${t.category} ${st.isSettled ? '<span style="font-size:10px; background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:4px;">चुकती</span>' : ''}</p>
+              <p class="tx-sub">${dateDisplay} • <strong>${typeLabel}</strong></p>
+              ${noteHtml}
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: flex-start; gap: 4px; flex-shrink: 0;">
               <div style="text-align: right;">
-                <div style="font-size: 14px; font-weight: bold; color: ${badgeColor};">
-                  ₹${t.amount.toLocaleString('en-IN')}
-                </div>
-                ${!isSettled ? `<button type="button" class="btn-settle" onclick="settleUdhar('${t.id}')" style="margin-top: 3px;">✅ चुकते करा</button>` : ''}
+                ${amountHtml}
+                ${actionBtns}
               </div>
               <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
             </div>
@@ -1017,7 +1231,6 @@
         historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
       }
 
-      // फक्त बजेट नोंदी (उधारी वगळून)
       const budgetTx = transactions.filter(t => t.type !== 'udhar_give' && t.type !== 'udhar_take');
 
       let lifetimeIncome = 0, lifetimeExpense = 0, lifetimeSaving = 0, lifetimeWithdraw = 0;
@@ -1102,7 +1315,7 @@
       if (transactions.length === 0) { alert("नोंद उपलब्ध नाही!"); return; }
       let csv = "ID,Tariqh,Prakar,Vargawari_VyakticheNaav,Rakkam,Madhyam_Sthiti,Tip\n";
       transactions.forEach(t => {
-        csv += `"${t.id}","${t.date}","${t.type}","${t.category}","${t.amount}","${t.mode}","${t.notes.replace(/"/g, '""')}"\n`;
+        csv += `"${t.id}","${t.date}","${t.type}","${t.category}","${t.amount}","${t.mode}","${(t.notes || '').replace(/"/g, '""')}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a');
