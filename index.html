@@ -11,9 +11,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- खरी Excel (.xlsx) फाईल तयार करण्यासाठी SheetJS लायब्ररी -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 70px; user-select: none; }
@@ -39,10 +36,11 @@
     .type-btn.active-inc { background: #10b981; color: #fff; border-color: #10b981; }
     .type-btn.active-sav { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     
-    .sub-sav-box { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #eef2ff; padding: 6px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #c7d2fe; }
-    .sub-btn { padding: 7px 4px; border-radius: 7px; text-align: center; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+    .sub-sav-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; background: #eef2ff; padding: 6px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #c7d2fe; }
+    .sub-btn { padding: 7px 3px; border-radius: 7px; text-align: center; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
     .sub-btn.active-invest { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     .sub-btn.active-withdraw { background: #d97706; color: #fff; border-color: #d97706; }
+    .sub-btn.active-exit { background: #059669; color: #fff; border-color: #059669; }
 
     .btn-submit { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
     .btn-submit:active { transform: scale(0.98); }
@@ -56,14 +54,12 @@
     .auth-tab { padding: 8px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #64748b; }
     .auth-tab.active { background: #fff; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-    /* ३ रेषांचा साईडबार मेनू */
     #filterDrawerBackdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 90; display: none; }
     #filterDrawer { position: fixed; top: 0; left: 0; bottom: 0; width: 82%; max-width: 310px; background: #fff; z-index: 95; padding: 18px 16px; box-shadow: 4px 0 15px rgba(0,0,0,0.15); transform: translateX(-100%); transition: transform 0.25s ease; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
     #filterDrawer.open { transform: translateX(0); }
     .drawer-btn { width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 13px; font-weight: bold; color: #0f172a; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
     .drawer-btn:active { transform: scale(0.98); background: #eff6ff; border-color: #93c5fd; }
 
-    /* उधारी बटणे व ३-कॉलम तक्ता */
     .udhar-type-btn { padding: 9px 6px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; }
     .udhar-type-btn.active-give { background: #10b981; color: #fff; border-color: #10b981; }
     .udhar-type-btn.active-take { background: #ef4444; color: #fff; border-color: #ef4444; }
@@ -81,7 +77,6 @@
     .split-col-lbl { font-size: 9px; color: #64748b; font-weight: 700; display: block; }
     .split-col-val { font-size: 12px; font-weight: 900; margin-top: 1px; display: block; }
 
-    /* ३ कॉलम असलेला सविस्तर तक्ता */
     .udhar-table-wrap { margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff; }
     .udhar-table { width: 100%; border-collapse: collapse; font-size: 11px; }
     .udhar-table th { background: #f1f5f9; color: #334155; font-weight: bold; padding: 6px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; }
@@ -91,13 +86,26 @@
     .tag-give { display: inline-block; font-size: 9px; font-weight: bold; background: #fef3c7; color: #b45309; padding: 1px 5px; border-radius: 4px; margin-bottom: 2px; }
     .tag-ret { display: inline-block; font-size: 9px; font-weight: bold; background: #d1fae5; color: #065f46; padding: 1px 5px; border-radius: 4px; margin-bottom: 2px; }
 
-    /* स्वतंत्र क्रेडिट कार्ड व गुंतवणूक विभाग */
     .cc-banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 3px 8px rgba(15,23,42,0.18); }
     .inv-banner { background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: #fff; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 3px 8px rgba(67,56,202,0.2); }
     .btn-cc-pay { background: #38bdf8; color: #0f172a; border: none; padding: 7px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
     .btn-cc-pay:active { transform: scale(0.95); }
     .cc-card-item { background: #fff; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
     .inv-fund-card { background: #fff; border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; border-radius: 12px; padding: 12px; }
+
+    .rep-table-wrap { border: 1px solid #cbd5e1; border-radius: 10px; overflow-x: auto; background: #fff; }
+    .rep-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .rep-table th { background: #1e293b; color: #fff; padding: 8px 6px; text-align: left; white-space: nowrap; }
+    .rep-table td { padding: 7px 6px; border-bottom: 1px solid #e2e8f0; color: #0f172a; vertical-align: top; }
+    .rep-table tr:nth-child(even) { background: #f8fafc; }
+    .rep-summary-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      header, .no-print, #filterDrawer, #filterDrawerBackdrop { display: none !important; }
+      .main-wrap { max-width: 100%; padding: 0; }
+      .card, .rep-table-wrap { box-shadow: none; border: 1px solid #94a3b8; }
+    }
   </style>
 </head>
 <body>
@@ -112,6 +120,11 @@
 
     <button type="button" onclick="switchView('budget'); closeFilterDrawer();" class="drawer-btn" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;">
       <span>💰 मुख्य बजेट (खर्च / जमा)</span>
+      <span>›</span>
+    </button>
+
+    <button type="button" onclick="switchView('report'); closeFilterDrawer();" class="drawer-btn" style="background: #ecfdf5; border-color: #6ee7b7; color: #047857;">
+      <span>📊 सविस्तर रिपोर्ट (Statement / PDF)</span>
       <span>›</span>
     </button>
 
@@ -362,7 +375,7 @@
     </div>
   </div>
 
-  <!-- Header (ईमेल बटण काढले आहे) -->
+  <!-- Header -->
   <header>
     <div style="display: flex; align-items: center; gap: 10px;">
       <button type="button" onclick="openFilterDrawer()" class="btn-menu" title="मेनू आणि विभाग">☰</button>
@@ -375,14 +388,14 @@
     </div>
     <div style="display: flex; gap: 6px;">
       <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr" title="रिफ्रेश करा">🔄</button>
-      <button type="button" onclick="downloadExcelReport()" class="btn-hdr" style="background: #059669; border-color: #34d399;" title="Excel (.xlsx) डाउनलोड करा">📥 Excel</button>
+      <button type="button" onclick="switchView('report')" class="btn-hdr" style="background: #059669; border-color: #34d399;" title="सविस्तर रिपोर्ट पहा">📊 रिपोर्ट</button>
       <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;" title="लॉगआउट">🚪</button>
     </div>
   </header>
 
   <main class="main-wrap">
     <!-- User Status आणि उजव्या बाजूला 🔎 सर्च आयकॉन -->
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; padding: 0 4px;">
+    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; padding: 0 4px;">
       <span>खाते: <strong id="displayUserId" style="color: #0f172a;">-</strong></span>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="color: #2563eb; cursor: pointer; font-weight: bold;" onclick="triggerManualSync()">🔄 सिंक करा</span>
@@ -391,7 +404,7 @@
     </div>
 
     <!-- 🔎 त्वरित सर्च बॉक्स -->
-    <div id="quickSearchBox" style="display: none; position: relative;">
+    <div id="quickSearchBox" class="no-print" style="display: none; position: relative;">
       <input type="text" id="searchInput" oninput="handleSearchInput()" placeholder="काहीही शोधा (नाव, कारण, फंड/शेअर, कार्ड)..." style="padding-right: 34px; border-color: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,0.1);">
       <button type="button" onclick="clearQuickSearch()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 14px; color: #64748b; cursor: pointer; padding: 4px;">✕</button>
     </div>
@@ -405,21 +418,24 @@
           <div id="btnTypeSav" class="type-btn" onclick="setType('saving')">गुंतवणूक</div>
         </div>
 
+        <!-- गुंतवणुकीचे ३ साधे पर्याय: गुंतवले / अंशतः काढले / पूर्ण काढले -->
         <div id="savingActionBox" class="sub-sav-box" style="display: none;">
-          <div id="btnSubInvest" class="sub-btn active-invest" onclick="setSavingAction('saving')">➕ नवीन गुंतवणूक</div>
-          <div id="btnSubWithdraw" class="sub-btn" onclick="setSavingAction('withdraw')">↩️ गुंतवणूक काढली (Withdraw)</div>
+          <div id="btnSubInvest" class="sub-btn active-invest" onclick="setSavingAction('saving')">➕ गुंतवले</div>
+          <div id="btnSubWithdraw" class="sub-btn" onclick="setSavingAction('withdraw')">↩️ अंशतः काढले</div>
+          <div id="btnSubFullExit" class="sub-btn" onclick="setSavingAction('sav_exit')">🏁 पूर्ण काढले</div>
         </div>
 
-        <!-- फंड / शेअर / योजनेचे नाव (केवळ गुंतवणुकीसाठी अनिवार्य बॉक्स) -->
+        <!-- फंड / शेअर / योजनेचे नाव -->
         <div id="fundNameWrap" class="form-group" style="display: none; background: #f8fafc; padding: 9px; border-radius: 10px; border: 1px solid #c7d2fe;">
           <label class="lbl-text" style="color: #4338ca; display: block; margin-bottom: 4px;">📈 फंड / शेअर / योजनेचे नाव *</label>
           <input type="text" id="fundNameInput" list="savedFundsList" placeholder="उदा. SBI Bluechip Fund, Tata Motors, HDFC FD...">
           <datalist id="savedFundsList"></datalist>
+          <p id="exitHelpText" style="display: none; font-size: 10px; color: #059669; font-weight: bold; margin-top: 4px;">💡 शेवटी उरलेली सर्व रक्कम टाका — सुरुवातीपासूनचा एकूण नफा किंवा तोटा आपोआप मोजला जाईल!</p>
         </div>
 
         <div class="grid-2 form-group">
           <div>
-            <label class="lbl-text">रक्कम (₹) *</label>
+            <label id="amountLabel" class="lbl-text">रक्कम (₹) *</label>
             <input type="number" id="amount" required placeholder="0" style="font-weight: bold; font-size: 16px;">
           </div>
           <div>
@@ -454,7 +470,7 @@
           <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण रोख/बँक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
         </div>
-        <div class="card" style="cursor: pointer;" onclick="switchView('investment')" title="फंडनुसार गुंतवणूक पाहण्यासाठी क्लिक करा">
+        <div class="card" style="cursor: pointer;" onclick="switchView('investment')" title="फंडनुसार गुंतवणूक व नफा-तोटा पाहण्यासाठी क्लिक करा">
           <p class="lbl-text">गुंतवणूक (Savings) ›</p>
           <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण गुंतवणूक: <strong id="lifetimeSavingsText" style="color: #0f172a;">₹0</strong></p>
@@ -549,7 +565,8 @@
     <div id="creditCardSection" style="display: none; flex-direction: column; gap: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 10px; gap: 6px;">
         <button type="button" onclick="openManageCardsModal()" style="background: #0284c7; color: #fff; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">➕ नवीन कार्ड जोडा</button>
-        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #0284c7; color: #0369a1; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
+        <button type="button" onclick="openCCReportDirect()" style="background: #0f172a; color: #38bdf8; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">📊 कार्ड रिपोर्ट</button>
+        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #0284c7; color: #0369a1; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेट</button>
       </div>
 
       <div class="cc-banner">
@@ -577,19 +594,26 @@
     <!-- ==================== विभाग ४: गुंतवणूक पोर्टफोलिओ (INVESTMENT PORTFOLIO SECTION) ==================== -->
     <div id="investmentSection" style="display: none; flex-direction: column; gap: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: center; background: #eef2ff; border: 1px solid #c7d2fe; padding: 8px 10px; border-radius: 10px; gap: 6px;">
-        <button type="button" onclick="switchView('budget'); setType('saving');" style="background: #4f46e5; color: #fff; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">➕ नवीन गुंतवणूक नोंदवा</button>
-        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #4f46e5; color: #4338ca; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
+        <button type="button" onclick="switchView('budget'); setType('saving');" style="background: #4f46e5; color: #fff; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">➕ नवीन गुंतवणूक</button>
+        <button type="button" onclick="openInvReportDirect()" style="background: #1e1b4b; color: #a5b4fc; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">📊 गुंतवणूक रिपोर्ट</button>
+        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #4f46e5; color: #4338ca; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेट</button>
       </div>
 
       <div class="inv-banner">
-        <div>
-          <p style="font-size: 11px; color: #c7d2fe; font-weight: 600;">📈 एकूण शिल्लक गुंतवणूक (Net Invested)</p>
-          <p id="invNetTotal" style="font-size: 24px; font-weight: 900; color: #a5b4fc; margin-top: 2px;">₹0</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <p style="font-size: 11px; color: #c7d2fe; font-weight: 600;">📈 एकूण शिल्लक गुंतवणूक (Active)</p>
+            <p id="invNetTotal" style="font-size: 24px; font-weight: 900; color: #a5b4fc; margin-top: 2px;">₹0</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-size: 10px; color: #c7d2fe; font-weight: 600;">निव्वळ नफा / तोटा</p>
+            <p id="invTotalProfitLoss" style="font-size: 16px; font-weight: 900; color: #34d399; margin-top: 2px;">₹0</p>
+          </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 11px;">
           <div>
             <span style="color: #c7d2fe;">एकूण गुंतवले (Invested):</span><br>
-            <strong id="invGrossInvested" style="font-size: 14px; color: #34d399;">₹0</strong>
+            <strong id="invGrossInvested" style="font-size: 14px; color: #e0e7ff;">₹0</strong>
           </div>
           <div>
             <span style="color: #c7d2fe;">एकूण काढले (Withdrawn):</span><br>
@@ -599,13 +623,82 @@
       </div>
 
       <div>
-        <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">फंड / शेअरनुसार तपशील (Fund / Share-wise)</h3>
+        <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">फंड / शेअरनुसार तपशील (नफा-तोट्यासह)</h3>
         <div id="invFundWiseList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
       <div>
         <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">गुंतवणूक व्यवहार इतिहास</h3>
         <div id="invHistoryList"></div>
+      </div>
+    </div>
+
+    <!-- ==================== विभाग ५: सविस्तर रिपोर्ट व प्रिंट (REPORT / STATEMENT SECTION) ==================== -->
+    <div id="reportSection" style="display: none; flex-direction: column; gap: 12px;">
+      <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 10px;">
+        <span style="font-size: 12px; font-weight: bold; color: #065f46;">📊 सविस्तर रिपोर्ट जनरेटर</span>
+        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #059669; color: #047857; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
+      </div>
+
+      <div class="card no-print">
+        <div class="form-group">
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">१. कशाचा रिपोर्ट हवा आहे? (Report Type)</label>
+          <select id="repCategorySelect" onchange="onReportTypeChange()" style="font-weight: bold; border-color: #2563eb; background: #eff6ff;">
+            <option value="all">📋 सर्व व्यवहारांचा रिपोर्ट (All Transactions)</option>
+            <option value="creditcard">💳 क्रेडिट कार्ड रिपोर्ट (खर्च आणि बिल भरणा)</option>
+            <option value="investment">📈 गुंतवणूक रिपोर्ट (Fund / Share नुसार)</option>
+            <option value="udhar">📒 उधारी खाते रिपोर्ट (येणे / देणे)</option>
+            <option value="expense">💸 केवळ खर्च रिपोर्ट (Expenses Only)</option>
+            <option value="income">💰 केवळ कमाई रिपोर्ट (Income Only)</option>
+          </select>
+        </div>
+
+        <div id="repSubCardWrap" class="form-group" style="display: none;">
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">कोणत्या क्रेडिट कार्डचा रिपोर्ट?</label>
+          <select id="repSpecificCardSelect" onchange="generateCustomReport()"></select>
+        </div>
+
+        <div id="repSubFundWrap" class="form-group" style="display: none;">
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">कोणत्या फंड / शेअरचा रिपोर्ट?</label>
+          <select id="repSpecificFundSelect" onchange="generateCustomReport()"></select>
+        </div>
+
+        <div class="grid-2 form-group">
+          <div>
+            <label class="lbl-text" style="display: block; margin-bottom: 4px;">या तारखेपासून (From)</label>
+            <input type="date" id="repStartDate" onchange="generateCustomReport()">
+          </div>
+          <div>
+            <label class="lbl-text" style="display: block; margin-bottom: 4px;">या तारखेपर्यंत (To)</label>
+            <input type="date" id="repEndDate" onchange="generateCustomReport()">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <button type="button" onclick="setReportDatePreset('month')" style="flex: 1; padding: 6px; border-radius: 7px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: bold; cursor: pointer;">चालू महिना</button>
+          <button type="button" onclick="setReportDatePreset('all')" style="flex: 1; padding: 6px; border-radius: 7px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: bold; cursor: pointer;">सर्व तारखा (All)</button>
+        </div>
+
+        <div class="grid-2">
+          <button type="button" onclick="window.print()" style="background: #0f172a; color: #fff; border: none; padding: 10px; border-radius: 9px; font-size: 12px; font-weight: bold; cursor: pointer;">🖨️ PDF / Print सेव्ह</button>
+          <button type="button" onclick="copyReportText()" style="background: #10b981; color: #fff; border: none; padding: 10px; border-radius: 9px; font-size: 12px; font-weight: bold; cursor: pointer;">📋 कॉपी (WhatsApp)</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 12px;">
+        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 10px;">
+          <h3 id="repHeaderTitle" style="font-size: 15px; font-weight: bold; color: #0f172a;">सविस्तर आर्थिक अहवाल</h3>
+          <p id="repHeaderSub" style="font-size: 11px; color: #64748b; margin-top: 2px;">कालावधी: सर्व नोंदी</p>
+        </div>
+
+        <div id="repSummaryCards" class="rep-summary-box" style="margin-bottom: 12px;"></div>
+
+        <div class="rep-table-wrap">
+          <table class="rep-table">
+            <thead id="repTableHead"></thead>
+            <tbody id="repTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -635,8 +728,13 @@
     let pendingQueue = [];
     let deleteQueue = [];
     let isSyncing = false;
+    let lastGeneratedPlainTextReport = '';
 
-    // ==================== फंड / शेअरचे नाव वेगळे करणे व सुचवणे ====================
+    // ==================== फंड / शेअरचे नाव व नफा-तोटा हिशोब ====================
+    function isInvestmentType(type) {
+      return type === 'saving' || type === 'withdraw' || type === 'sav_exit';
+    }
+
     function extractFundInfo(t) {
       const raw = (t.notes || '').trim();
       const match = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
@@ -651,7 +749,7 @@
       if (!dl) return;
       const fundSet = new Set();
       transactions.forEach(t => {
-        if (t.type === 'saving' || t.type === 'withdraw') {
+        if (isInvestmentType(t.type)) {
           const info = extractFundInfo(t);
           if (info.fundName) fundSet.add(info.fundName);
         }
@@ -659,63 +757,117 @@
       dl.innerHTML = Array.from(fundSet).map(f => `<option value="${f.replace(/"/g, '&quot;')}">`).join('');
     }
 
-    function renderInvestmentSection() {
-      const search = (document.getElementById('searchInput').value || '').toLowerCase();
-      const invTx = transactions.filter(t => t.type === 'saving' || t.type === 'withdraw');
-
-      let totalInv = 0, totalWith = 0;
+    function computeFundAnalytics(txList) {
       const fundMap = {};
+      const chronological = [...txList].filter(t => isInvestmentType(t.type)).reverse();
 
-      invTx.forEach(t => {
+      chronological.forEach(t => {
         const info = extractFundInfo(t);
         const key = info.fundName;
         if (!fundMap[key]) {
-          fundMap[key] = { name: key, category: t.category, invested: 0, withdrawn: 0 };
+          fundMap[key] = {
+            name: key,
+            category: t.category,
+            totalInvested: 0,
+            totalWithdrawn: 0,
+            currentPrincipal: 0,
+            realizedPL: 0,
+            isExited: false
+          };
         }
+
+        const f = fundMap[key];
+        f.category = t.category;
+
         if (t.type === 'saving') {
-          totalInv += t.amount;
-          fundMap[key].invested += t.amount;
+          f.totalInvested += t.amount;
+          f.currentPrincipal += t.amount;
+          f.isExited = false;
         } else if (t.type === 'withdraw') {
-          totalWith += t.amount;
-          fundMap[key].withdrawn += t.amount;
+          f.totalWithdrawn += t.amount;
+          f.currentPrincipal = Math.max(0, f.currentPrincipal - t.amount);
+        } else if (t.type === 'sav_exit') {
+          f.totalWithdrawn += t.amount;
+          const pl = t.amount - f.currentPrincipal;
+          f.realizedPL += pl;
+          f.currentPrincipal = 0;
+          f.isExited = true;
         }
       });
 
-      const netInv = totalInv - totalWith;
-      document.getElementById('invNetTotal').innerText = `₹${netInv.toLocaleString('en-IN')}`;
-      document.getElementById('invGrossInvested').innerText = `₹${totalInv.toLocaleString('en-IN')}`;
-      document.getElementById('invGrossWithdrawn').innerText = `₹${totalWith.toLocaleString('en-IN')}`;
+      let activeInvestedTotal = 0;
+      let grossInvestedTotal = 0;
+      let grossWithdrawnTotal = 0;
+      let overallPL = 0;
+
+      Object.values(fundMap).forEach(f => {
+        activeInvestedTotal += f.currentPrincipal;
+        grossInvestedTotal += f.totalInvested;
+        grossWithdrawnTotal += f.totalWithdrawn;
+        overallPL += f.realizedPL;
+      });
+
+      return { fundMap, activeInvestedTotal, grossInvestedTotal, grossWithdrawnTotal, overallPL };
+    }
+
+    function renderInvestmentSection() {
+      const search = (document.getElementById('searchInput').value || '').toLowerCase();
+      const stats = computeFundAnalytics(transactions);
+
+      document.getElementById('invNetTotal').innerText = `₹${stats.activeInvestedTotal.toLocaleString('en-IN')}`;
+      document.getElementById('invGrossInvested').innerText = `₹${stats.grossInvestedTotal.toLocaleString('en-IN')}`;
+      document.getElementById('invGrossWithdrawn').innerText = `₹${stats.grossWithdrawnTotal.toLocaleString('en-IN')}`;
+
+      const plEl = document.getElementById('invTotalProfitLoss');
+      if (stats.overallPL > 0) {
+        plEl.innerText = `+₹${stats.overallPL.toLocaleString('en-IN')} (नफा)`;
+        plEl.style.color = '#34d399';
+      } else if (stats.overallPL < 0) {
+        plEl.innerText = `-₹${Math.abs(stats.overallPL).toLocaleString('en-IN')} (तोटा)`;
+        plEl.style.color = '#fca5a5';
+      } else {
+        plEl.innerText = `₹0`;
+        plEl.style.color = '#e0e7ff';
+      }
 
       const fundListEl = document.getElementById('invFundWiseList');
-      const fundsArr = Object.values(fundMap).filter(f => (f.name + f.category).toLowerCase().includes(search));
+      const fundsArr = Object.values(stats.fundMap).filter(f => (f.name + f.category).toLowerCase().includes(search));
 
       if (fundsArr.length === 0) {
         fundListEl.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">कोणत्याही फंड किंवा शेअरची गुंतवणूक नोंद आढळली नाही.</div>`;
       } else {
         fundListEl.innerHTML = fundsArr.map(f => {
-          const bal = f.invested - f.withdrawn;
-          const balColor = bal >= 0 ? '#4f46e5' : '#d97706';
+          let plBadge = '';
+          if (f.realizedPL > 0) {
+            plBadge = `<span style="display:inline-block; background:#d1fae5; color:#065f46; font-size:10px; font-weight:bold; padding:2px 7px; border-radius:6px; margin-top:4px;">🟢 नफा (Profit): +₹${f.realizedPL.toLocaleString('en-IN')}</span>`;
+          } else if (f.realizedPL < 0) {
+            plBadge = `<span style="display:inline-block; background:#fee2e2; color:#991b1b; font-size:10px; font-weight:bold; padding:2px 7px; border-radius:6px; margin-top:4px;">🔴 तोटा (Loss): -₹${Math.abs(f.realizedPL).toLocaleString('en-IN')}</span>`;
+          } else if (f.isExited) {
+            plBadge = `<span style="display:inline-block; background:#f1f5f9; color:#475569; font-size:10px; font-weight:bold; padding:2px 7px; border-radius:6px; margin-top:4px;">⚪ ना नफा ना तोटा (₹0)</span>`;
+          }
+
           return `
             <div class="inv-fund-card">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                 <div>
                   <p style="font-size: 14px; font-weight: bold; color: #0f172a;">📈 ${f.name}</p>
                   <p style="font-size: 10px; color: #64748b;">प्रकार: ${f.category}</p>
+                  ${plBadge}
                 </div>
                 <button type="button" onclick="quickAddFundTx('${f.name.replace(/'/g, "\\'")}', '${f.category.replace(/'/g, "\\'")}')" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer;">+ नोंद करा</button>
               </div>
-              <div class="udhar-split-box" style="margin-top: 4px;">
+              <div class="udhar-split-box" style="margin-top: 6px;">
                 <div style="border-right: 1px solid #e2e8f0;">
                   <span class="split-col-lbl">गुंतवले (Invested)</span>
-                  <span class="split-col-val" style="color: #10b981;">₹${f.invested.toLocaleString('en-IN')}</span>
+                  <span class="split-col-val" style="color: #4f46e5;">₹${f.totalInvested.toLocaleString('en-IN')}</span>
                 </div>
                 <div style="border-right: 1px solid #e2e8f0;">
                   <span class="split-col-lbl">काढले (Withdrawn)</span>
-                  <span class="split-col-val" style="color: #d97706;">₹${f.withdrawn.toLocaleString('en-IN')}</span>
+                  <span class="split-col-val" style="color: #d97706;">₹${f.totalWithdrawn.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
                   <span class="split-col-lbl">शिल्लक गुंतवणूक</span>
-                  <span class="split-col-val" style="color: ${balColor};">₹${bal.toLocaleString('en-IN')}</span>
+                  <span class="split-col-val" style="color: #0f172a;">₹${f.currentPrincipal.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
@@ -723,6 +875,7 @@
         }).join('');
       }
 
+      const invTx = transactions.filter(t => isInvestmentType(t.type));
       const histEl = document.getElementById('invHistoryList');
       const filteredHist = invTx.filter(t => {
         const info = extractFundInfo(t);
@@ -736,9 +889,10 @@
 
       histEl.innerHTML = filteredHist.map(t => {
         const info = extractFundInfo(t);
-        const isWith = (t.type === 'withdraw');
-        const badgeColor = isWith ? '#d97706' : '#4f46e5';
-        const sign = isWith ? '↩️ काढले: ' : '➕ गुंतवले: ';
+        let badgeColor = '#4f46e5', sign = '➕ गुंतवले: ';
+        if (t.type === 'withdraw') { badgeColor = '#d97706'; sign = '↩️ अंशतः काढले: '; }
+        else if (t.type === 'sav_exit') { badgeColor = '#059669'; sign = '🏁 पूर्ण काढले: '; }
+
         return `
           <div class="tx-item">
             <div>
@@ -1054,6 +1208,333 @@
       }).join('');
     }
 
+    // ==================== सविस्तर रिपोर्ट जनरेटर (Statement & Print) ====================
+    function openCCReportDirect() {
+      switchView('report');
+      document.getElementById('repCategorySelect').value = 'creditcard';
+      onReportTypeChange();
+    }
+
+    function openInvReportDirect() {
+      switchView('report');
+      document.getElementById('repCategorySelect').value = 'investment';
+      onReportTypeChange();
+    }
+
+    function setReportDatePreset(preset) {
+      if (preset === 'all') {
+        document.getElementById('repStartDate').value = '';
+        document.getElementById('repEndDate').value = '';
+      } else {
+        const now = new Date();
+        document.getElementById('repStartDate').value = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
+        document.getElementById('repEndDate').value = getLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+      }
+      generateCustomReport();
+    }
+
+    function onReportTypeChange() {
+      const repType = document.getElementById('repCategorySelect').value;
+      const cardWrap = document.getElementById('repSubCardWrap');
+      const fundWrap = document.getElementById('repSubFundWrap');
+
+      cardWrap.style.display = 'none';
+      fundWrap.style.display = 'none';
+
+      if (repType === 'creditcard') {
+        cardWrap.style.display = 'block';
+        const cardSel = document.getElementById('repSpecificCardSelect');
+        const dueMap = getCardWiseDueMap();
+        const allCards = Array.from(new Set([...creditCards, ...Object.keys(dueMap)]));
+        cardSel.innerHTML = `<option value="ALL_CARDS">सर्व क्रेडिट कार्ड्स (All Cards)</option>` +
+          allCards.map(c => `<option value="${c}">💳 ${c}</option>`).join('');
+      } else if (repType === 'investment') {
+        fundWrap.style.display = 'block';
+        const fundSel = document.getElementById('repSpecificFundSelect');
+        const fundSet = new Set();
+        transactions.forEach(t => {
+          if (isInvestmentType(t.type)) {
+            fundSet.add(extractFundInfo(t).fundName);
+          }
+        });
+        fundSel.innerHTML = `<option value="ALL_FUNDS">सर्व फंड व शेअर्स (All Funds/Shares)</option>` +
+          Array.from(fundSet).map(f => `<option value="${f}">📈 ${f}</option>`).join('');
+      }
+
+      generateCustomReport();
+    }
+
+    function generateCustomReport() {
+      const repType = document.getElementById('repCategorySelect').value;
+      const sDate = document.getElementById('repStartDate').value;
+      const eDate = document.getElementById('repEndDate').value;
+      const search = (document.getElementById('searchInput').value || '').toLowerCase();
+
+      const dateLabel = (!sDate && !eDate) ? "सर्व तारखा (All Time)" : `${sDate || 'सुरुवात'} ते ${eDate || 'आज'}`;
+      document.getElementById('repHeaderSub').innerText = `खाते: ${currentUserName || currentUserEmail} | कालावधी: ${dateLabel}`;
+
+      const inDateRange = (dt) => {
+        if (sDate && dt < sDate) return false;
+        if (eDate && dt > eDate) return false;
+        return true;
+      };
+
+      const titleEl = document.getElementById('repHeaderTitle');
+      const sumBox = document.getElementById('repSummaryCards');
+      const tHead = document.getElementById('repTableHead');
+      const tBody = document.getElementById('repTableBody');
+
+      let plainLines = [`📊 *माझे बजेट - रिपोर्ट* (${dateLabel})\n`];
+
+      if (repType === 'creditcard') {
+        const chosenCard = document.getElementById('repSpecificCardSelect').value || 'ALL_CARDS';
+        titleEl.innerText = chosenCard === 'ALL_CARDS' ? "💳 क्रेडिट कार्ड सविस्तर स्टेटमेंट (सर्व कार्ड्स)" : `💳 ${chosenCard} - क्रेडिट कार्ड स्टेटमेंट`;
+
+        let totalSpent = 0, totalPaid = 0;
+        const ccRows = transactions.filter(t => {
+          if (!inDateRange(t.date)) return false;
+          const isCCExp = (t.type === 'expense' && isCreditCardMode(t.mode));
+          const isCCBill = (t.type === 'cc_bill');
+          if (!isCCExp && !isCCBill) return false;
+
+          const cardName = isCCBill ? (t.category || 'Credit Card') : getCleanCardName(t.mode);
+          if (chosenCard !== 'ALL_CARDS' && cardName !== chosenCard) return false;
+          return (cardName + t.notes + t.category + t.amount).toLowerCase().includes(search);
+        });
+
+        ccRows.forEach(t => {
+          if (t.type === 'cc_bill') totalPaid += t.amount;
+          else totalSpent += t.amount;
+        });
+
+        const netDiff = totalSpent - totalPaid;
+        sumBox.innerHTML = `
+          <div><span class="lbl-text">एकूण कार्ड खर्च (Spent)</span><p style="font-size:15px; font-weight:900; color:#ef4444;">₹${totalSpent.toLocaleString('en-IN')}</p></div>
+          <div><span class="lbl-text">एकूण बिल भरले (Paid)</span><p style="font-size:15px; font-weight:900; color:#10b981;">₹${totalPaid.toLocaleString('en-IN')}</p></div>
+          <div style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+            <span class="lbl-text">या काळातील फरक (बाकी):</span>
+            <strong style="font-size:15px; color:#0284c7; margin-left: 6px;">₹${netDiff.toLocaleString('en-IN')}</strong>
+          </div>
+        `;
+
+        tHead.innerHTML = `<tr><th>तारीख</th><th>कार्डचे नाव</th><th>कुठे खर्च / बिल तपशील</th><th style="text-align:right;">रक्कम (₹)</th></tr>`;
+
+        if (ccRows.length === 0) {
+          tBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:14px;">या कालावधीत क्रेडिट कार्डची नोंद नाही.</td></tr>`;
+        } else {
+          tBody.innerHTML = ccRows.map(t => {
+            const isBill = (t.type === 'cc_bill');
+            const cName = isBill ? t.category : getCleanCardName(t.mode);
+            const badge = isBill
+              ? `<span style="background:#d1fae5; color:#065f46; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:bold;">✅ बिल भरले (${t.mode})</span>`
+              : `<span style="background:#fee2e2; color:#991b1b; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:bold;">💳 खर्च (${t.category})</span>`;
+            const amtColor = isBill ? '#10b981' : '#ef4444';
+            const sign = isBill ? '−' : '+';
+            plainLines.push(`• ${t.date} | ${cName} | ${isBill ? 'बिल भरले' : 'खर्च'}: ₹${t.amount} (${t.notes})`);
+            return `
+              <tr>
+                <td style="white-space:nowrap;">${t.date}</td>
+                <td style="font-weight:bold;">${cName}</td>
+                <td>${badge}<div style="margin-top:2px;">${t.notes}</div></td>
+                <td style="text-align:right; font-weight:bold; color:${amtColor}; white-space:nowrap;">${sign} ₹${t.amount.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+        plainLines.push(`\nएकूण खर्च: ₹${totalSpent} | एकूण बिल भरले: ₹${totalPaid}`);
+      }
+
+      else if (repType === 'investment') {
+        const chosenFund = document.getElementById('repSpecificFundSelect').value || 'ALL_FUNDS';
+        titleEl.innerText = chosenFund === 'ALL_FUNDS' ? "📈 गुंतवणूक सविस्तर रिपोर्ट (सर्व फंड/शेअर्स)" : `📈 ${chosenFund} - गुंतवणूक रिपोर्ट`;
+
+        let totalInv = 0, totalWith = 0;
+        const invRows = transactions.filter(t => {
+          if (!inDateRange(t.date)) return false;
+          if (!isInvestmentType(t.type)) return false;
+          const info = extractFundInfo(t);
+          if (chosenFund !== 'ALL_FUNDS' && info.fundName !== chosenFund) return false;
+          return (info.fundName + info.cleanNote + t.category + t.amount).toLowerCase().includes(search);
+        });
+
+        invRows.forEach(t => {
+          if (t.type === 'saving') totalInv += t.amount;
+          else totalWith += t.amount;
+        });
+
+        const stats = computeFundAnalytics(invRows);
+        const plTxt = stats.overallPL > 0 ? `+₹${stats.overallPL.toLocaleString('en-IN')} (नफा)` : (stats.overallPL < 0 ? `-₹${Math.abs(stats.overallPL).toLocaleString('en-IN')} (तोटा)` : '₹0');
+
+        sumBox.innerHTML = `
+          <div><span class="lbl-text">गुंतवलेली रक्कम</span><p style="font-size:15px; font-weight:900; color:#4f46e5;">₹${totalInv.toLocaleString('en-IN')}</p></div>
+          <div><span class="lbl-text">काढलेली रक्कम</span><p style="font-size:15px; font-weight:900; color:#d97706;">₹${totalWith.toLocaleString('en-IN')}</p></div>
+          <div style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 6px; display:flex; justify-content:space-between;">
+            <span><span class="lbl-text">शिल्लक:</span> <strong>₹${stats.activeInvestedTotal.toLocaleString('en-IN')}</strong></span>
+            <span><span class="lbl-text">नफा/तोटा:</span> <strong style="color:${stats.overallPL >= 0 ? '#10b981' : '#ef4444'};">${plTxt}</strong></span>
+          </div>
+        `;
+
+        tHead.innerHTML = `<tr><th>तारीख</th><th>फंड / शेअर नाव</th><th>प्रकार / वर्गवारी</th><th style="text-align:right;">रक्कम (₹)</th></tr>`;
+
+        if (invRows.length === 0) {
+          tBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:14px;">या कालावधीत गुंतवणूक नोंद नाही.</td></tr>`;
+        } else {
+          tBody.innerHTML = invRows.map(t => {
+            const info = extractFundInfo(t);
+            let badge = `<span style="background:#e0e7ff; color:#3730a3; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:bold;">➕ गुंतवले</span>`;
+            let col = '#4f46e5', lbl = 'गुंतवले';
+            if (t.type === 'withdraw') {
+              badge = `<span style="background:#fef3c7; color:#b45309; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:bold;">↩️ अंशतः काढले</span>`;
+              col = '#d97706'; lbl = 'अंशतः काढले';
+            } else if (t.type === 'sav_exit') {
+              badge = `<span style="background:#d1fae5; color:#065f46; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:bold;">🏁 पूर्ण काढले</span>`;
+              col = '#059669'; lbl = 'पूर्ण काढले';
+            }
+            plainLines.push(`• ${t.date} | ${info.fundName} | ${lbl}: ₹${t.amount}`);
+            return `
+              <tr>
+                <td style="white-space:nowrap;">${t.date}</td>
+                <td style="font-weight:bold;">${info.fundName}</td>
+                <td>${badge} <span style="font-size:10px; color:#64748b;">${t.category}</span><div style="margin-top:2px;">${info.cleanNote !== info.fundName ? info.cleanNote : ''}</div></td>
+                <td style="text-align:right; font-weight:bold; color:${col}; white-space:nowrap;">₹${t.amount.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+        plainLines.push(`\nएकूण गुंतवले: ₹${totalInv} | एकूण काढले: ₹${totalWith} | नफा/तोटा: ${plTxt}`);
+      }
+
+      else if (repType === 'udhar') {
+        titleEl.innerText = "📒 उधारी खाते सविस्तर रिपोर्ट";
+        const udharRows = transactions.filter(t => (t.type === 'udhar_give' || t.type === 'udhar_take') && inDateRange(t.date));
+
+        let totRec = 0, totPay = 0;
+        udharRows.forEach(t => {
+          const st = parseUdharStatus(t);
+          if (!st.isSettled) {
+            if (t.type === 'udhar_give') totRec += st.remaining;
+            else totPay += st.remaining;
+          }
+        });
+
+        sumBox.innerHTML = `
+          <div><span class="lbl-text">येणे बाकी (To Receive)</span><p style="font-size:15px; font-weight:900; color:#10b981;">₹${totRec.toLocaleString('en-IN')}</p></div>
+          <div><span class="lbl-text">देणे बाकी (To Pay)</span><p style="font-size:15px; font-weight:900; color:#ef4444;">₹${totPay.toLocaleString('en-IN')}</p></div>
+        `;
+
+        tHead.innerHTML = `<tr><th>तारीख</th><th>व्यक्तीचे नाव</th><th>प्रकार</th><th style="text-align:right;">एकूण / बाकी</th></tr>`;
+
+        if (udharRows.length === 0) {
+          tBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:14px;">उधारी नोंद उपलब्ध नाही.</td></tr>`;
+        } else {
+          tBody.innerHTML = udharRows.map(t => {
+            const st = parseUdharStatus(t);
+            const isGive = (t.type === 'udhar_give');
+            plainLines.push(`• ${t.category} (${isGive ? 'येणे' : 'देणे'}): एकूण ₹${t.amount} | बाकी ₹${st.remaining}`);
+            return `
+              <tr>
+                <td style="white-space:nowrap;">${t.date}</td>
+                <td style="font-weight:bold;">${t.category}</td>
+                <td>${isGive ? '📤 उधार दिले' : '📥 उधार घेतले'}</td>
+                <td style="text-align:right; white-space:nowrap;">
+                  <div>एकूण: ₹${t.amount.toLocaleString('en-IN')}</div>
+                  <div style="font-weight:bold; color:${st.isSettled ? '#64748b' : (isGive ? '#10b981' : '#ef4444')};">बाकी: ₹${st.remaining.toLocaleString('en-IN')}</div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      else {
+        const titleMap = {
+          all: "📋 सर्व व्यवहारांचा सविस्तर अहवाल",
+          expense: "💸 केवळ खर्चाचा सविस्तर अहवाल",
+          income: "💰 केवळ कमाईचा सविस्तर अहवाल"
+        };
+        titleEl.innerText = titleMap[repType] || "सविस्तर अहवाल";
+
+        const filtered = transactions.filter(t => {
+          if (t.type === 'udhar_give' || t.type === 'udhar_take') return false;
+          if (!inDateRange(t.date)) return false;
+          if (repType === 'expense' && t.type !== 'expense') return false;
+          if (repType === 'income' && t.type !== 'income') return false;
+          const cleanMode = getCleanCardName(t.mode);
+          return (t.category + t.notes + cleanMode + t.amount).toLowerCase().includes(search);
+        });
+
+        let sumInc = 0, sumExp = 0, sumSav = 0;
+        filtered.forEach(t => {
+          if (t.type === 'income') sumInc += t.amount;
+          else if (t.type === 'expense') sumExp += t.amount;
+          else if (t.type === 'saving') sumSav += t.amount;
+        });
+
+        sumBox.innerHTML = `
+          <div><span class="lbl-text">कमाई (Income)</span><p style="font-size:15px; font-weight:900; color:#10b981;">₹${sumInc.toLocaleString('en-IN')}</p></div>
+          <div><span class="lbl-text">खर्च (Expense)</span><p style="font-size:15px; font-weight:900; color:#ef4444;">₹${sumExp.toLocaleString('en-IN')}</p></div>
+          <div style="grid-column: span 2; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+            <span class="lbl-text">गुंतवणूक (Savings):</span>
+            <strong style="font-size:14px; color:#4f46e5; margin-left: 6px;">₹${sumSav.toLocaleString('en-IN')}</strong>
+          </div>
+        `;
+
+        tHead.innerHTML = `<tr><th>तारीख</th><th>तपशील / वर्गवारी</th><th>माध्यम</th><th style="text-align:right;">रक्कम (₹)</th></tr>`;
+
+        if (filtered.length === 0) {
+          tBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:14px;">या कालावधीत नोंदी आढळल्या नाहीत.</td></tr>`;
+        } else {
+          tBody.innerHTML = filtered.map(t => {
+            const cleanMode = isCreditCardMode(t.mode) ? `💳 ${getCleanCardName(t.mode)}` : t.mode;
+            let color = '#ef4444', sign = '-';
+            if (t.type === 'income') { color = '#10b981'; sign = '+'; }
+            else if (t.type === 'saving') { color = '#4f46e5'; sign = '💼'; }
+            else if (t.type === 'withdraw') { color = '#d97706'; sign = '↩️'; }
+            else if (t.type === 'sav_exit') { color = '#059669'; sign = '🏁'; }
+            else if (t.type === 'cc_bill') { color = '#0284c7'; sign = '💳'; }
+
+            const noteClean = isInvestmentType(t.type) ? extractFundInfo(t).fundName : t.notes;
+            plainLines.push(`• ${t.date} | ${noteClean} (${cleanMode}): ${sign}₹${t.amount}`);
+            return `
+              <tr>
+                <td style="white-space:nowrap;">${t.date}</td>
+                <td><strong>${noteClean}</strong><div style="font-size:10px; color:#64748b;">${t.category}</div></td>
+                <td style="font-size:10px;">${cleanMode}</td>
+                <td style="text-align:right; font-weight:bold; color:${color}; white-space:nowrap;">${sign} ₹${t.amount.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+        plainLines.push(`\nकमाई: ₹${sumInc} | खर्च: ₹${sumExp} | गुंतवणूक: ₹${sumSav}`);
+      }
+
+      lastGeneratedPlainTextReport = plainLines.join('\n');
+    }
+
+    function copyReportText() {
+      if (!lastGeneratedPlainTextReport) {
+        alert("कॉपी करण्यासाठी डेटा उपलब्ध नाही!");
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lastGeneratedPlainTextReport)
+          .then(() => alert("✅ संपूर्ण रिपोर्ट कॉपी झाला आहे! आता तुम्ही WhatsApp किंवा कुठेही पेस्ट करू शकता."))
+          .catch(() => fallbackCopyText(lastGeneratedPlainTextReport));
+      } else {
+        fallbackCopyText(lastGeneratedPlainTextReport);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert("✅ संपूर्ण रिपोर्ट कॉपी झाला आहे! आता तुम्ही WhatsApp वर पेस्ट करू शकता.");
+    }
+
     // ==================== नवीन उधारी खाते फॉर्म उघडणे व बंद करणे ====================
     function openNewUdharForm() {
       document.getElementById('btnToggleUdharForm').style.display = 'none';
@@ -1082,12 +1563,14 @@
       const udharSec = document.getElementById('udharSection');
       const ccSec = document.getElementById('creditCardSection');
       const invSec = document.getElementById('investmentSection');
+      const repSec = document.getElementById('reportSection');
       const hdrTitle = document.getElementById('headerTitle');
 
       budgetSec.style.display = 'none';
       udharSec.style.display = 'none';
       ccSec.style.display = 'none';
       invSec.style.display = 'none';
+      repSec.style.display = 'none';
 
       if (view === 'udhar') {
         udharSec.style.display = 'flex';
@@ -1102,6 +1585,10 @@
         invSec.style.display = 'flex';
         hdrTitle.innerText = '📈 गुंतवणूक पोर्टफोलिओ';
         renderInvestmentSection();
+      } else if (view === 'report') {
+        repSec.style.display = 'flex';
+        hdrTitle.innerText = '📊 सविस्तर रिपोर्ट';
+        onReportTypeChange();
       } else {
         budgetSec.style.display = 'flex';
         hdrTitle.innerText = '💰 माझे बजेट';
@@ -1116,6 +1603,8 @@
         renderCreditCardSection();
       } else if (currentView === 'investment') {
         renderInvestmentSection();
+      } else if (currentView === 'report') {
+        generateCustomReport();
       } else {
         renderTransactions();
       }
@@ -1177,8 +1666,12 @@
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      document.getElementById('startDate').value = getLocalDateString(firstDay);
-      document.getElementById('endDate').value = getLocalDateString(lastDay);
+      const fStr = getLocalDateString(firstDay);
+      const lStr = getLocalDateString(lastDay);
+      document.getElementById('startDate').value = fStr;
+      document.getElementById('endDate').value = lStr;
+      document.getElementById('repStartDate').value = fStr;
+      document.getElementById('repEndDate').value = lStr;
     }
 
     function showAllTime() {
@@ -1348,7 +1841,7 @@
     }
 
     function setType(type) {
-      const isSavGroup = (type === 'saving' || type === 'withdraw');
+      const isSavGroup = isInvestmentType(type);
       
       document.getElementById('btnTypeExp').className = 'type-btn' + (type === 'expense' ? ' active-exp' : '');
       document.getElementById('btnTypeInc').className = 'type-btn' + (type === 'income' ? ' active-inc' : '');
@@ -1367,12 +1860,14 @@
         updateSavedFundsDatalist();
         catSelect.innerHTML = `<option value="">-- निवडा --</option>` + savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
         catSelect.value = '';
-        setSavingAction(type === 'withdraw' ? 'withdraw' : 'saving');
+        setSavingAction(type === 'saving' ? 'saving' : type);
       } else {
         subBox.style.display = 'none';
         fundWrap.style.display = 'none';
         fundInput.required = false;
         fundInput.value = '';
+        document.getElementById('exitHelpText').style.display = 'none';
+        document.getElementById('amountLabel').innerText = 'रक्कम (₹) *';
         selectedType = type;
         noteInput.placeholder = "उदा. किराणा, पेट्रोल...";
         document.getElementById('btnSubmitForm').style.background = '#2563eb';
@@ -1389,15 +1884,28 @@
       selectedType = action;
       document.getElementById('btnSubInvest').className = 'sub-btn' + (action === 'saving' ? ' active-invest' : '');
       document.getElementById('btnSubWithdraw').className = 'sub-btn' + (action === 'withdraw' ? ' active-withdraw' : '');
+      document.getElementById('btnSubFullExit').className = 'sub-btn' + (action === 'sav_exit' ? ' active-exit' : '');
 
       const noteInput = document.getElementById('note');
       const submitBtn = document.getElementById('btnSubmitForm');
+      const exitHelp = document.getElementById('exitHelpText');
+      const amtLbl = document.getElementById('amountLabel');
 
-      if (action === 'withdraw') {
-        noteInput.placeholder = "उदा. नफा बुक केला / पैसे काढले...";
+      if (action === 'sav_exit') {
+        exitHelp.style.display = 'block';
+        amtLbl.innerText = 'हातात आलेली एकूण रक्कम (₹) *';
+        noteInput.placeholder = "उदा. सर्व युनिट्स / शेअर्स विकले...";
+        submitBtn.style.background = '#059669';
+        submitBtn.innerText = 'पूर्ण गुंतवणूक काढल्याची नोंद करा';
+      } else if (action === 'withdraw') {
+        exitHelp.style.display = 'none';
+        amtLbl.innerText = 'काढलेली रक्कम (₹) *';
+        noteInput.placeholder = "उदा. काही पैसे काढले...";
         submitBtn.style.background = '#d97706';
-        submitBtn.innerText = 'गुंतवणूक काढल्याची नोंद करा';
+        submitBtn.innerText = 'अंशतः रक्कम काढल्याची नोंद करा';
       } else {
+        exitHelp.style.display = 'none';
+        amtLbl.innerText = 'गुंतवलेली रक्कम (₹) *';
         noteInput.placeholder = "उदा. मासिक SIP, नवीन खरेदी...";
         submitBtn.style.background = '#4f46e5';
         submitBtn.innerText = 'गुंतवणूक सेव्ह करा';
@@ -1411,7 +1919,7 @@
       const category = document.getElementById('category').value;
       const mode = document.getElementById('mode').value;
       const date = document.getElementById('transDate').value;
-      const isSavGroup = (selectedType === 'saving' || selectedType === 'withdraw');
+      const isSavGroup = isInvestmentType(selectedType);
       const fundName = document.getElementById('fundNameInput').value.trim();
 
       if (isSavGroup && !fundName) {
@@ -2129,16 +2637,16 @@
         if (t.type === 'income') lifetimeIncome += t.amount;
         else if (t.type === 'expense' && !isCreditCardMode(t.mode)) lifetimeCashExpense += t.amount;
         else if (t.type === 'saving') lifetimeSaving += t.amount;
-        else if (t.type === 'withdraw') lifetimeWithdraw += t.amount;
+        else if (t.type === 'withdraw' || t.type === 'sav_exit') lifetimeWithdraw += t.amount;
         else if (t.type === 'cc_bill') lifetimeCCBillPaid += t.amount;
       });
       
       const lifetimeUdharEffect = getUdharNetCashEffect('', '');
       const lifetimeNetBalance = (lifetimeIncome + lifetimeWithdraw + lifetimeUdharEffect) - (lifetimeCashExpense + lifetimeSaving + lifetimeCCBillPaid);
-      const lifetimeNetSavings = lifetimeSaving - lifetimeWithdraw;
+      const lifetimeStats = computeFundAnalytics(budgetTx);
 
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
-      document.getElementById('lifetimeSavingsText').innerText = `₹${lifetimeNetSavings.toLocaleString('en-IN')}`;
+      document.getElementById('lifetimeSavingsText').innerText = `₹${lifetimeStats.activeInvestedTotal.toLocaleString('en-IN')}`;
 
       const dateFiltered = budgetTx.filter(t => {
         let matchDate = true;
@@ -2155,7 +2663,7 @@
           if (!isCreditCardMode(t.mode)) rangeCashExpense += t.amount;
         }
         else if (t.type === 'saving') rangeSaving += t.amount;
-        else if (t.type === 'withdraw') rangeWithdraw += t.amount;
+        else if (t.type === 'withdraw' || t.type === 'sav_exit') rangeWithdraw += t.amount;
         else if (t.type === 'cc_bill') rangeCCBillPaid += t.amount;
       });
 
@@ -2168,8 +2676,8 @@
       balEl.style.color = rangeNetBalance >= 0 ? '#2563eb' : '#ef4444';
 
       const savEl = document.getElementById('totalSavings');
-      savEl.innerText = `₹${rangeNetSavings.toLocaleString('en-IN')}`;
-      savEl.style.color = rangeNetSavings >= 0 ? '#4f46e5' : '#d97706';
+      savEl.innerText = `₹${Math.max(0, rangeNetSavings).toLocaleString('en-IN')}`;
+      savEl.style.color = '#4f46e5';
 
       document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
       document.getElementById('totalExpense').innerText = `₹${rangeTotalExpense.toLocaleString('en-IN')}`;
@@ -2177,7 +2685,7 @@
       const listFiltered = dateFiltered.filter(t => {
         const cleanMode = getCleanCardName(t.mode);
         const matchSearch = (t.category + t.notes + cleanMode + t.amount).toLowerCase().includes(search);
-        const matchType = typeFilter === 'all' || t.type === typeFilter;
+        const matchType = typeFilter === 'all' || t.type === typeFilter || (typeFilter === 'withdraw' && t.type === 'sav_exit');
         return matchSearch && matchType;
       });
 
@@ -2198,7 +2706,12 @@
           titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
         }
         else if (t.type === 'withdraw') {
-          badgeColor = '#d97706'; sign = '↩️ +'; typeBadge = 'गुंतवणूक काढली';
+          badgeColor = '#d97706'; sign = '↩️ +'; typeBadge = 'अंशतः काढले';
+          const info = extractFundInfo(t);
+          titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
+        }
+        else if (t.type === 'sav_exit') {
+          badgeColor = '#059669'; sign = '🏁 +'; typeBadge = 'पूर्ण काढले';
           const info = extractFundInfo(t);
           titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
         }
@@ -2221,100 +2734,6 @@
           </div>
         `;
       }).join('');
-    }
-
-    // ==================== खरी Excel (.xlsx) फाईल तयार करून डाउनलोड करणे (Android WebView Compatible) ====================
-    function downloadExcelReport() {
-      if (transactions.length === 0) {
-        alert("डाउनलोड करण्यासाठी कोणतीही नोंद उपलब्ध नाही!");
-        return;
-      }
-
-      const typeMap = {
-        expense: "खर्च (Expense)",
-        income: "जमा (Income)",
-        saving: "गुंतवणूक (Investment)",
-        withdraw: "गुंतवणूक काढली (Withdraw)",
-        cc_bill: "क्रेडिट कार्ड बिल भरणा",
-        udhar_give: "उधार दिले (येणे)",
-        udhar_take: "उधार घेतले (देणे)"
-      };
-
-      const todayStr = getLocalDateString(new Date());
-      const fileName = `Majhe_Budget_${todayStr}.xlsx`;
-
-      // १. जर SheetJS लायब्ररी लोड झाली असेल तर खरी .xlsx फाईल तयार करणे (Data URI द्वारे जेणेकरून Save As रिकामा येणार नाही)
-      if (typeof XLSX !== 'undefined') {
-        const rows = transactions.map((t, idx) => {
-          const cleanMode = getCleanCardName(t.mode);
-          let fundOrPerson = "-";
-          let cleanNote = (t.notes || "").replace(/\n/g, " | ");
-
-          if (t.type === 'saving' || t.type === 'withdraw') {
-            const info = extractFundInfo(t);
-            fundOrPerson = info.fundName;
-            cleanNote = info.cleanNote;
-          } else if (t.type === 'udhar_give' || t.type === 'udhar_take' || t.type === 'cc_bill') {
-            fundOrPerson = t.category;
-          }
-
-          return {
-            "अ.क्र.": idx + 1,
-            "तारीख (Date)": t.date,
-            "प्रकार (Type)": typeMap[t.type] || t.type,
-            "फंड / शेअर / व्यक्ती / कार्ड": fundOrPerson,
-            "वर्गवारी (Category)": t.category,
-            "रक्कम (₹)": Number(t.amount) || 0,
-            "माध्यम / स्थिती": cleanMode,
-            "तपशील / टीप": cleanNote
-          };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(rows);
-        ws['!cols'] = [
-          { wch: 7 }, { wch: 13 }, { wch: 24 }, { wch: 24 },
-          { wch: 20 }, { wch: 13 }, { wch: 18 }, { wch: 30 }
-        ];
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Budget_Report");
-
-        // Android WebView साठी base64 data URI वापरणे आवश्यक असते (blob: चालत नाही)
-        const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-        const dataUri = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Data;
-
-        const a = document.createElement('a');
-        a.href = dataUri;
-        a.setAttribute('download', fileName);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        return;
-      }
-
-      // २. जर ऑफलाइन असताना लायब्ररी लोड नसेल, तर बॅकअप म्हणून UTF-8 CSV Data URI ने डाउनलोड करणे
-      let csv = "\uFEFFअ.क्र.,तारीख,प्रकार,फंड_किंवा_व्यक्ती,वर्गवारी,रक्कम,माध्यम,टीप\n";
-      transactions.forEach((t, idx) => {
-        const cleanMode = getCleanCardName(t.mode);
-        let fundOrPerson = "-";
-        let cleanNote = (t.notes || "").replace(/\n/g, " | ").replace(/"/g, '""');
-        if (t.type === 'saving' || t.type === 'withdraw') {
-          const info = extractFundInfo(t);
-          fundOrPerson = info.fundName;
-          cleanNote = info.cleanNote.replace(/"/g, '""');
-        } else if (t.type === 'udhar_give' || t.type === 'udhar_take' || t.type === 'cc_bill') {
-          fundOrPerson = t.category;
-        }
-        csv += `"${idx + 1}","${t.date}","${typeMap[t.type] || t.type}","${fundOrPerson}","${t.category}","${t.amount}","${cleanMode}","${cleanNote}"\n`;
-      });
-
-      const csvDataUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-      const a = document.createElement('a');
-      a.href = csvDataUri;
-      a.setAttribute('download', `Majhe_Budget_${todayStr}.csv`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
     }
 
     window.addEventListener('online', fetchDataFromSheet);
