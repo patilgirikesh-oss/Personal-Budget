@@ -579,14 +579,13 @@
     let isSyncing = false;
 
     // ==================== मल्टिपल क्रेडिट कार्ड्स व्यवस्था ====================
-    let creditCards = ['Credit Card']; // डिफॉल्ट कार्ड
+    let creditCards = ['Credit Card'];
 
     function loadCreditCards() {
       try {
         const saved = JSON.parse(localStorage.getItem('budget_cc_list_' + currentUserEmail) || '[]');
         const cardSet = new Set(saved.length > 0 ? saved : ['Credit Card']);
         
-        // जुन्या व्यवहारांमधूनही कार्डांची नावे आपोआप ओळखणे
         transactions.forEach(t => {
           if (t.type === 'expense' && isCreditCardMode(t.mode)) {
             cardSet.add(getCleanCardName(t.mode));
@@ -628,7 +627,6 @@
         <option value="Cash">रोख (Cash)</option>
       `;
 
-      // खर्च निवडलेला असेल तरच क्रेडिट कार्ड्सचे पर्याय दाखवणे
       if (selectedType === 'expense') {
         creditCards.forEach(card => {
           const val = (card === 'Credit Card') ? 'Credit Card' : `CC:${card}`;
@@ -664,7 +662,6 @@
         return;
       }
 
-      // जर फक्त डिफॉल्ट 'Credit Card' असेल आणि वापरकर्ता पहिले नाव टाकत असेल तर यादीत जोडा
       creditCards.push(rawName);
       saveCreditCards();
       populateModeDropdown();
@@ -703,7 +700,6 @@
       }).join('');
     }
 
-    // प्रत्येक कार्डनुसार स्वतंत्र बाकी बिल काढणे
     function getCardWiseDueMap() {
       const dueMap = {};
       creditCards.forEach(c => dueMap[c] = 0);
@@ -742,7 +738,6 @@
       if (preselectedCard && allCards.includes(preselectedCard)) {
         selectEl.value = preselectedCard;
       } else {
-        // ज्या कार्डचे बिल बाकी आहे ते आपोआप निवडणे
         const firstDueCard = allCards.find(c => (dueMap[c] || 0) > 0);
         if (firstDueCard) selectEl.value = firstDueCard;
       }
@@ -787,7 +782,7 @@
         id: "CC_" + Date.now(),
         date: date,
         type: 'cc_bill',
-        category: chosenCard, // कार्डचे नाव category मध्ये सेव्ह होईल
+        category: chosenCard,
         amount: amt,
         mode: payMode,
         notes: note
@@ -1252,6 +1247,65 @@
         return { isSettled: rem === 0, paid: paid, remaining: rem, lastDate: dt };
       }
       return { isSettled: false, paid: 0, remaining: t.amount, lastDate: '' };
+    }
+
+    // उधारीचा रोख/बँक शिल्लक (Balance) वर होणारा अचूक परिणाम मोजणारे फंक्शन
+    function getUdharNetCashEffect(startDate, endDate) {
+      let netEffect = 0;
+
+      transactions.forEach(t => {
+        if (t.type !== 'udhar_give' && t.type !== 'udhar_take') return;
+
+        const rawNotes = (t.notes || '').trim();
+        const lines = rawNotes ? rawNotes.split('\n').map(l => l.trim()).filter(Boolean) : [];
+        const hasStructuredPipe = lines.some(l => l.startsWith('[GIVE]|') || l.startsWith('[RET]|'));
+
+        if (!hasStructuredPipe) {
+          let inRange = true;
+          if (startDate && t.date < startDate) inRange = false;
+          if (endDate && t.date > endDate) inRange = false;
+          if (inRange) {
+            netEffect += (t.type === 'udhar_give') ? -t.amount : t.amount;
+          }
+          const st = parseUdharStatus(t);
+          if (st.paid > 0) {
+            const pDate = st.lastDate || t.date;
+            let pInRange = true;
+            if (startDate && pDate < startDate) pInRange = false;
+            if (endDate && pDate > endDate) pInRange = false;
+            if (pInRange) {
+              netEffect += (t.type === 'udhar_give') ? st.paid : -st.paid;
+            }
+          }
+          return;
+        }
+
+        lines.forEach(line => {
+          if (line.startsWith('[GIVE]|')) {
+            const parts = line.split('|');
+            const dt = parts[1] || t.date;
+            const amt = parseFloat(parts[2]) || 0;
+            let inRange = true;
+            if (startDate && dt < startDate) inRange = false;
+            if (endDate && dt > endDate) inRange = false;
+            if (inRange) {
+              netEffect += (t.type === 'udhar_give') ? -amt : amt;
+            }
+          } else if (line.startsWith('[RET]|')) {
+            const parts = line.split('|');
+            const dt = parts[1] || t.date;
+            const amt = parseFloat(parts[2]) || 0;
+            let inRange = true;
+            if (startDate && dt < startDate) inRange = false;
+            if (endDate && dt > endDate) inRange = false;
+            if (inRange) {
+              netEffect += (t.type === 'udhar_give') ? amt : -amt;
+            }
+          }
+        });
+      });
+
+      return netEffect;
     }
 
     function openAddMoreModal(id) {
@@ -1800,7 +1854,7 @@
 
       const budgetTx = transactions.filter(t => t.type !== 'udhar_give' && t.type !== 'udhar_take');
 
-      // २. एकूण रोख/बँक शिल्लक (क्रेडिट कार्डने केलेला खर्च रोख शिल्लक मधून वजा होणार नाही, फक्त कार्ड बिल भरणा वजा होईल)
+      // २. एकूण रोख/बँक शिल्लक (क्रेडिट कार्ड खर्च वजा होणार नाही; उधारी जमा/दिल्याचा अचूक परिणाम धरला जाईल)
       let lifetimeIncome = 0, lifetimeCashExpense = 0, lifetimeSaving = 0, lifetimeWithdraw = 0, lifetimeCCBillPaid = 0;
       budgetTx.forEach(t => {
         if (t.type === 'income') lifetimeIncome += t.amount;
@@ -1810,7 +1864,8 @@
         else if (t.type === 'cc_bill') lifetimeCCBillPaid += t.amount;
       });
       
-      const lifetimeNetBalance = (lifetimeIncome + lifetimeWithdraw) - (lifetimeCashExpense + lifetimeSaving + lifetimeCCBillPaid);
+      const lifetimeUdharEffect = getUdharNetCashEffect('', '');
+      const lifetimeNetBalance = (lifetimeIncome + lifetimeWithdraw + lifetimeUdharEffect) - (lifetimeCashExpense + lifetimeSaving + lifetimeCCBillPaid);
       const lifetimeNetSavings = lifetimeSaving - lifetimeWithdraw;
 
       document.getElementById('lifetimeBalanceText').innerText = `₹${lifetimeNetBalance.toLocaleString('en-IN')}`;
@@ -1828,15 +1883,16 @@
       dateFiltered.forEach(t => {
         if (t.type === 'income') rangeIncome += t.amount;
         else if (t.type === 'expense') {
-          rangeTotalExpense += t.amount; // एकूण खर्चात क्रेडिट कार्डचा खर्च दिसेल
-          if (!isCreditCardMode(t.mode)) rangeCashExpense += t.amount; // रोख शिल्लकमध्ये फक्त रोख/UPI खर्च वजा होईल
+          rangeTotalExpense += t.amount;
+          if (!isCreditCardMode(t.mode)) rangeCashExpense += t.amount;
         }
         else if (t.type === 'saving') rangeSaving += t.amount;
         else if (t.type === 'withdraw') rangeWithdraw += t.amount;
         else if (t.type === 'cc_bill') rangeCCBillPaid += t.amount;
       });
 
-      const rangeNetBalance = (rangeIncome + rangeWithdraw) - (rangeCashExpense + rangeSaving + rangeCCBillPaid);
+      const rangeUdharEffect = getUdharNetCashEffect(startDate, endDate);
+      const rangeNetBalance = (rangeIncome + rangeWithdraw + rangeUdharEffect) - (rangeCashExpense + rangeSaving + rangeCCBillPaid);
       const rangeNetSavings = rangeSaving - rangeWithdraw;
 
       const balEl = document.getElementById('totalBalance');
