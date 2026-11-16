@@ -88,14 +88,12 @@
     .tag-give { display: inline-block; font-size: 9px; font-weight: bold; background: #fef3c7; color: #b45309; padding: 1px 5px; border-radius: 4px; margin-bottom: 2px; }
     .tag-ret { display: inline-block; font-size: 9px; font-weight: bold; background: #d1fae5; color: #065f46; padding: 1px 5px; border-radius: 4px; margin-bottom: 2px; }
 
-    /* मल्टिपल क्रेडिट कार्ड पट्टी */
-    .cc-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 6px rgba(15,23,42,0.15); }
-    .btn-cc-pay { background: #38bdf8; color: #0f172a; border: none; padding: 6px 11px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
-    .btn-cc-add { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    /* स्वतंत्र क्रेडिट कार्ड सेक्शन कार्ड्स */
+    .cc-banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 3px 8px rgba(15,23,42,0.18); }
+    .btn-cc-pay { background: #38bdf8; color: #0f172a; border: none; padding: 7px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .btn-cc-add { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .btn-cc-pay:active, .btn-cc-add:active { transform: scale(0.95); }
-    .cc-chip-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); }
-    .cc-chip { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 5px 9px; font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .cc-chip:active { transform: scale(0.96); background: rgba(56,189,248,0.2); }
+    .cc-card-item { background: #fff; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
@@ -118,8 +116,8 @@
       <span>›</span>
     </button>
 
-    <button type="button" onclick="closeFilterDrawer(); openManageCardsModal();" class="drawer-btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #0f172a;">
-      <span>💳 क्रेडिट कार्ड्स व्यवस्थापित करा</span>
+    <button type="button" onclick="switchView('creditcard'); closeFilterDrawer();" class="drawer-btn" style="background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;">
+      <span>💳 क्रेडिट कार्ड खाते (Credit Cards)</span>
       <span>›</span>
     </button>
 
@@ -154,11 +152,11 @@
     </div>
   </aside>
 
-  <!-- नवीन क्रेडिट कार्ड जोडण्यासाठी व पाहण्यासाठी पॉप-अप (Manage Credit Cards Modal) -->
+  <!-- नवीन क्रेडिट कार्ड जोडण्यासाठी पॉप-अप -->
   <div id="manageCardsModal" class="modal-overlay" style="display: none;">
     <div class="card" style="width: 100%; max-width: 360px; padding: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px;">
-        <h3 style="font-size: 16px; font-weight: bold; color: #0f172a;">💳 तुमची क्रेडिट कार्ड्स</h3>
+        <h3 style="font-size: 16px; font-weight: bold; color: #0f172a;">💳 नवीन क्रेडिट कार्ड जोडा</h3>
         <button type="button" onclick="closeManageCardsModal()" style="background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
       </div>
 
@@ -172,7 +170,7 @@
     </div>
   </div>
 
-  <!-- क्रेडिट कार्ड बिल भरण्यासाठी पॉप-अप (Credit Card Bill Pay Modal) -->
+  <!-- क्रेडिट कार्ड बिल भरण्यासाठी पॉप-अप -->
   <div id="ccBillModal" class="modal-overlay" style="display: none;">
     <div class="card" style="width: 100%; max-width: 350px; text-align: center; padding: 20px;">
       <div style="font-size: 32px; margin-bottom: 6px;">💳</div>
@@ -193,6 +191,7 @@
         <div>
           <label class="lbl-text" style="display: block; margin-bottom: 4px;">पेमेंट माध्यम</label>
           <select id="ccPayModeInput">
+            <option value="">-- निवडा --</option>
             <option value="UPI">UPI / GPay</option>
             <option value="Cash">रोख (Cash)</option>
           </select>
@@ -357,7 +356,7 @@
   <!-- Header -->
   <header>
     <div style="display: flex; align-items: center; gap: 10px;">
-      <button type="button" onclick="openFilterDrawer()" class="btn-menu" title="मेनू आणि उधारी खाते">☰</button>
+      <button type="button" onclick="openFilterDrawer()" class="btn-menu" title="मेनू आणि विभाग">☰</button>
       <div>
         <h1 id="headerTitle" style="font-size: 16px; font-weight: bold;">💰 माझे बजेट</h1>
         <p id="syncStatus" style="font-size: 11px; margin-top: 2px;">
@@ -405,22 +404,22 @@
 
         <div class="grid-2 form-group">
           <div>
-            <label class="lbl-text">रक्कम (₹)</label>
+            <label class="lbl-text">रक्कम (₹) *</label>
             <input type="number" id="amount" required placeholder="0" style="font-weight: bold; font-size: 16px;">
           </div>
           <div>
-            <label class="lbl-text">वर्गवारी</label>
-            <select id="category"></select>
+            <label class="lbl-text">वर्गवारी *</label>
+            <select id="category" required></select>
           </div>
         </div>
 
         <div class="grid-2 form-group">
           <div>
-            <label class="lbl-text">माध्यम (UPI / Cash / Card)</label>
-            <select id="mode"></select>
+            <label class="lbl-text">माध्यम *</label>
+            <select id="mode" required></select>
           </div>
           <div>
-            <label class="lbl-text">तारीख</label>
+            <label class="lbl-text">तारीख *</label>
             <input type="date" id="transDate" required>
           </div>
         </div>
@@ -432,22 +431,6 @@
 
         <button type="submit" id="btnSubmitForm" class="btn-submit">नोंद सेव्ह करा</button>
       </form>
-
-      <!-- मल्टिपल क्रेडिट कार्ड बिल बाकी कार्ड (प्रत्येक कार्डचा स्वतंत्र हिशोब) -->
-      <div class="cc-card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <p style="font-size: 11px; color: #cbd5e1; font-weight: 600;">💳 एकूण क्रेडिट कार्ड बिल बाकी</p>
-            <p id="ccTotalDue" style="font-size: 20px; font-weight: 900; color: #38bdf8; margin-top: 2px;">₹0</p>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button type="button" onclick="openManageCardsModal()" class="btn-cc-add">+ कार्ड जोडा</button>
-            <button type="button" onclick="openCCBillModal()" class="btn-cc-pay">बिल भरा</button>
-          </div>
-        </div>
-        <!-- प्रत्येक कार्डचे स्वतंत्र बाकी बिल येथे दिसेल -->
-        <div id="ccBreakdownList" class="cc-chip-list"></div>
-      </div>
 
       <!-- हिशोब कार्ड्स -->
       <div class="grid-2">
@@ -499,12 +482,12 @@
         </div>
       </div>
 
-      <!-- 'नवीन उधारी खाते सुरू करा' बटण (यावर क्लिक केल्यावरच फॉर्म उघडेल) -->
+      <!-- 'नवीन उधारी खाते सुरू करा' बटण -->
       <button type="button" id="btnToggleUdharForm" onclick="openNewUdharForm()" class="btn-submit" style="background: #10b981; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(16,185,129,0.25);">
         <span>➕ नवीन उधारी खाते सुरू करा</span>
       </button>
 
-      <!-- नवीन उधारी नोंद फॉर्म (सुरुवातीला लपवलेला राहील) -->
+      <!-- नवीन उधारी नोंद फॉर्म -->
       <form id="udharForm" onsubmit="handleUdharSubmit(event)" class="card" style="display: none; border: 1px solid #a7f3d0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
           <span style="font-size: 13px; font-weight: bold; color: #0f172a;">📝 नवीन उधारी नोंद</span>
@@ -549,6 +532,38 @@
       </div>
 
       <div id="udharList"></div>
+    </div>
+
+    <!-- ==================== विभाग ३: स्वतंत्र क्रेडिट कार्ड खाते (CREDIT CARD SECTION) ==================== -->
+    <div id="creditCardSection" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 10px; gap: 6px;">
+        <button type="button" onclick="openManageCardsModal()" style="background: #0284c7; color: #fff; border: none; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">➕ नवीन कार्ड जोडा</button>
+        <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #0284c7; color: #0369a1; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
+      </div>
+
+      <!-- एकूण क्रेडिट कार्ड बिल कार्ड -->
+      <div class="cc-banner">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="font-size: 11px; color: #cbd5e1; font-weight: 600;">💳 एकूण क्रेडिट कार्ड बिल बाकी</p>
+            <p id="ccSectionTotalDue" style="font-size: 24px; font-weight: 900; color: #38bdf8; margin-top: 2px;">₹0</p>
+          </div>
+          <button type="button" onclick="openCCBillModal()" class="btn-cc-pay">बिल भरा</button>
+        </div>
+        <p style="font-size: 10px; color: #94a3b8;">नोंद: क्रेडिट कार्डचा खर्च हातातल्या रोख शिल्लक मधून बिल भरल्यावरच वजा होतो.</p>
+      </div>
+
+      <!-- प्रत्येक कार्डचे स्वतंत्र बाकी बिल यादी -->
+      <div>
+        <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">कार्डनुसार बाकी बिल (Card-wise Due)</h3>
+        <div id="ccSectionCardList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <!-- क्रेडिट कार्ड व्यवहार इतिहास -->
+      <div>
+        <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">क्रेडिट कार्ड व्यवहार व बिल भरणा इतिहास</h3>
+        <div id="ccHistoryList"></div>
+      </div>
     </div>
   </main>
 
@@ -597,7 +612,7 @@
       } catch (e) {
         creditCards = ['Credit Card'];
       }
-      populateModeDropdown();
+      populateModeDropdown(true);
     }
 
     function saveCreditCards() {
@@ -617,12 +632,14 @@
       return mode;
     }
 
-    function populateModeDropdown() {
+    // माध्यम (Mode) बाय-डिफॉल्ट रिकामे ("-- निवडा --") ठेवणे व अनिवार्य करणे
+    function populateModeDropdown(keepSelection = false) {
       const modeSelect = document.getElementById('mode');
       if (!modeSelect) return;
-      const prevVal = modeSelect.value;
+      const prevVal = keepSelection ? modeSelect.value : '';
 
       let optionsHtml = `
+        <option value="">-- निवडा --</option>
         <option value="UPI">UPI / GPay</option>
         <option value="Cash">रोख (Cash)</option>
       `;
@@ -635,8 +652,10 @@
       }
 
       modeSelect.innerHTML = optionsHtml;
-      if (Array.from(modeSelect.options).some(o => o.value === prevVal)) {
+      if (keepSelection && prevVal && Array.from(modeSelect.options).some(o => o.value === prevVal)) {
         modeSelect.value = prevVal;
+      } else {
+        modeSelect.value = '';
       }
     }
 
@@ -664,9 +683,9 @@
 
       creditCards.push(rawName);
       saveCreditCards();
-      populateModeDropdown();
+      populateModeDropdown(true);
       renderSavedCardsList();
-      renderTransactions();
+      if (currentView === 'creditcard') renderCreditCardSection();
       document.getElementById('newCardNameInput').value = '';
     }
 
@@ -678,9 +697,9 @@
       if (!confirm(`'${cardName}' हे कार्ड यादीतून काढायचे का? (जुन्या नोंदी सुरक्षित राहतील)`)) return;
       creditCards = creditCards.filter(c => c !== cardName);
       saveCreditCards();
-      populateModeDropdown();
+      populateModeDropdown(true);
       renderSavedCardsList();
-      renderTransactions();
+      if (currentView === 'creditcard') renderCreditCardSection();
     }
 
     function renderSavedCardsList() {
@@ -720,11 +739,6 @@
       return dueMap;
     }
 
-    function getLifetimeCreditCardDue() {
-      const dueMap = getCardWiseDueMap();
-      return Object.values(dueMap).reduce((sum, val) => sum + val, 0);
-    }
-
     function openCCBillModal(preselectedCard) {
       const dueMap = getCardWiseDueMap();
       const selectEl = document.getElementById('ccPayCardSelect');
@@ -743,6 +757,7 @@
       }
 
       onCCPayCardChange();
+      document.getElementById('ccPayModeInput').value = '';
       document.getElementById('ccPayDateInput').value = getLocalDateString(new Date());
       document.getElementById('ccPayNoteInput').value = '';
       document.getElementById('ccBillModal').style.display = 'flex';
@@ -773,6 +788,10 @@
         alert("कृपया वैध बिल रक्कम टाका!");
         return;
       }
+      if (!payMode) {
+        alert("कृपया पेमेंट माध्यम निवडा!");
+        return;
+      }
       if (!date) {
         alert("कृपया तारीख निवडा!");
         return;
@@ -793,13 +812,73 @@
       saveUserLocalData();
 
       closeCCBillModal();
-      renderTransactions();
+      handleSearchInput();
 
       if (navigator.onLine) {
         triggerSync();
       } else {
         setSyncBadge('offline');
       }
+    }
+
+    function renderCreditCardSection() {
+      const search = (document.getElementById('searchInput').value || '').toLowerCase();
+      const dueMap = getCardWiseDueMap();
+      const totalDue = Object.values(dueMap).reduce((s, v) => s + v, 0);
+
+      document.getElementById('ccSectionTotalDue').innerText = `₹${totalDue.toLocaleString('en-IN')}`;
+
+      const cardListEl = document.getElementById('ccSectionCardList');
+      const allCardKeys = Array.from(new Set([...creditCards, ...Object.keys(dueMap)]));
+      cardListEl.innerHTML = allCardKeys.map(card => {
+        const d = dueMap[card] || 0;
+        const valColor = d > 0 ? '#ef4444' : '#10b981';
+        return `
+          <div class="cc-card-item">
+            <div>
+              <p style="font-size: 14px; font-weight: bold; color: #0f172a;">💳 ${card}</p>
+              <p style="font-size: 11px; color: #64748b; margin-top: 2px;">बाकी बिल: <strong style="color: ${valColor}; font-size: 13px;">₹${d.toLocaleString('en-IN')}</strong></p>
+            </div>
+            <button type="button" onclick="openCCBillModal('${card.replace(/'/g, "\\'")}')" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;">बिल भरा</button>
+          </div>
+        `;
+      }).join('');
+
+      const ccTx = transactions.filter(t => {
+        const isCC = (t.type === 'expense' && isCreditCardMode(t.mode)) || t.type === 'cc_bill';
+        if (!isCC) return false;
+        const cardNm = t.type === 'cc_bill' ? t.category : getCleanCardName(t.mode);
+        return (cardNm + t.notes + t.category + t.amount).toLowerCase().includes(search);
+      });
+
+      const histEl = document.getElementById('ccHistoryList');
+      if (ccTx.length === 0) {
+        histEl.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">कोणतेही क्रेडिट कार्ड व्यवहार आढळले नाहीत.</div>`;
+        return;
+      }
+
+      histEl.innerHTML = ccTx.map(t => {
+        const isBill = (t.type === 'cc_bill');
+        const badgeColor = isBill ? '#10b981' : '#ef4444';
+        const sign = isBill ? '✅ बिल भरले: ' : '💳 खर्च: ';
+        const cardNm = isBill ? t.category : getCleanCardName(t.mode);
+        const subInfo = isBill ? `माध्यम: ${t.mode}` : `वर्गवारी: ${t.category}`;
+
+        return `
+          <div class="tx-item">
+            <div>
+              <p class="tx-notes">${t.notes}</p>
+              <p class="tx-sub">${t.date} • <strong>💳 ${cardNm}</strong> • ${subInfo}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; font-weight: bold; color: ${badgeColor};">
+                ${sign}₹${t.amount.toLocaleString('en-IN')}
+              </span>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // ==================== नवीन उधारी खाते फॉर्म उघडणे व बंद करणे ====================
@@ -828,16 +907,23 @@
       currentView = view;
       const budgetSec = document.getElementById('budgetSection');
       const udharSec = document.getElementById('udharSection');
+      const ccSec = document.getElementById('creditCardSection');
       const hdrTitle = document.getElementById('headerTitle');
 
+      budgetSec.style.display = 'none';
+      udharSec.style.display = 'none';
+      ccSec.style.display = 'none';
+
       if (view === 'udhar') {
-        budgetSec.style.display = 'none';
         udharSec.style.display = 'flex';
         hdrTitle.innerText = '📒 उधारी खाते';
         closeNewUdharForm();
         renderUdharList();
+      } else if (view === 'creditcard') {
+        ccSec.style.display = 'flex';
+        hdrTitle.innerText = '💳 क्रेडिट कार्ड खाते';
+        renderCreditCardSection();
       } else {
-        udharSec.style.display = 'none';
         budgetSec.style.display = 'flex';
         hdrTitle.innerText = '💰 माझे बजेट';
         renderTransactions();
@@ -847,6 +933,8 @@
     function handleSearchInput() {
       if (currentView === 'udhar') {
         renderUdharList();
+      } else if (currentView === 'creditcard') {
+        renderCreditCardSection();
       } else {
         renderTransactions();
       }
@@ -1111,7 +1199,8 @@
 
       if (isSavGroup) {
         subBox.style.display = 'grid';
-        catSelect.innerHTML = savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSelect.innerHTML = `<option value="">-- निवडा --</option>` + savingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSelect.value = '';
         setSavingAction(type === 'withdraw' ? 'withdraw' : 'saving');
       } else {
         subBox.style.display = 'none';
@@ -1121,9 +1210,10 @@
         document.getElementById('btnSubmitForm').innerText = 'नोंद सेव्ह करा';
         
         let cats = (type === 'expense') ? expenseCategories : incomeCategories;
-        catSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSelect.innerHTML = `<option value="">-- निवडा --</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSelect.value = '';
       }
-      populateModeDropdown();
+      populateModeDropdown(false);
     }
 
     function setSavingAction(action) {
@@ -1143,7 +1233,7 @@
         submitBtn.style.background = '#4f46e5';
         submitBtn.innerText = 'गुंतवणूक सेव्ह करा';
       }
-      populateModeDropdown();
+      populateModeDropdown(false);
     }
 
     function handleFormSubmit(e) {
@@ -1152,6 +1242,22 @@
       const category = document.getElementById('category').value;
       const mode = document.getElementById('mode').value;
       const date = document.getElementById('transDate').value;
+
+      if (!amount || amount <= 0) {
+        alert("कृपया वैध रक्कम टाका!");
+        return;
+      }
+      if (!category) {
+        alert("कृपया वर्गवारी निवडा!");
+        document.getElementById('category').focus();
+        return;
+      }
+      if (!mode) {
+        alert("कृपया माध्यम निवडा!");
+        document.getElementById('mode').focus();
+        return;
+      }
+
       const note = document.getElementById('note').value.trim() || category;
 
       const record = {
@@ -1249,7 +1355,6 @@
       return { isSettled: false, paid: 0, remaining: t.amount, lastDate: '' };
     }
 
-    // उधारीचा रोख/बँक शिल्लक (Balance) वर होणारा अचूक परिणाम मोजणारे फंक्शन
     function getUdharNetCashEffect(startDate, endDate) {
       let netEffect = 0;
 
@@ -1827,24 +1932,6 @@
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
-      // १. एकूण आणि प्रत्येक क्रेडिट कार्डनुसार बाकी बिल अपडेट करणे
-      const dueMap = getCardWiseDueMap();
-      const totalDue = Object.values(dueMap).reduce((s, v) => s + v, 0);
-      document.getElementById('ccTotalDue').innerText = `₹${totalDue.toLocaleString('en-IN')}`;
-
-      const breakdownContainer = document.getElementById('ccBreakdownList');
-      const allCardKeys = Array.from(new Set([...creditCards, ...Object.keys(dueMap)]));
-      breakdownContainer.innerHTML = allCardKeys.map(card => {
-        const d = dueMap[card] || 0;
-        const valColor = d > 0 ? '#fbbf24' : '#94a3b8';
-        return `
-          <div class="cc-chip" onclick="openCCBillModal('${card.replace(/'/g, "\\'")}')" title="बिल भरण्यासाठी क्लिक करा">
-            <span style="color: #e2e8f0; font-weight: 600;">${card}:</span>
-            <span style="color: ${valColor}; font-weight: 800;">₹${d.toLocaleString('en-IN')}</span>
-          </div>
-        `;
-      }).join('');
-
       const historyTitle = document.getElementById('historyTitle');
       if (!startDate && !endDate) {
         historyTitle.innerText = "सर्व नोंदींचा इतिहास (All Time)";
@@ -1854,7 +1941,7 @@
 
       const budgetTx = transactions.filter(t => t.type !== 'udhar_give' && t.type !== 'udhar_take');
 
-      // २. एकूण रोख/बँक शिल्लक (क्रेडिट कार्ड खर्च वजा होणार नाही; उधारी जमा/दिल्याचा अचूक परिणाम धरला जाईल)
+      // एकूण रोख/बँक शिल्लक (क्रेडिट कार्ड खर्च वजा होणार नाही; उधारी जमा/दिल्याचा अचूक परिणाम धरला जाईल)
       let lifetimeIncome = 0, lifetimeCashExpense = 0, lifetimeSaving = 0, lifetimeWithdraw = 0, lifetimeCCBillPaid = 0;
       budgetTx.forEach(t => {
         if (t.type === 'income') lifetimeIncome += t.amount;
@@ -1878,7 +1965,7 @@
         return matchDate;
       });
 
-      // ३. निवडलेल्या कालावधीतील हिशोब
+      // निवडलेल्या कालावधीतील हिशोब
       let rangeIncome = 0, rangeTotalExpense = 0, rangeCashExpense = 0, rangeSaving = 0, rangeWithdraw = 0, rangeCCBillPaid = 0;
       dateFiltered.forEach(t => {
         if (t.type === 'income') rangeIncome += t.amount;
