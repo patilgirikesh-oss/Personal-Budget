@@ -11,12 +11,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
+  <!-- खरी Excel (.xlsx) फाईल तयार करण्यासाठी SheetJS लायब्ररी -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 70px; user-select: none; }
     header { background-color: #2563eb; color: #ffffff; padding: 14px 16px; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
     .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-hdr { background: #1d4ed8; color: #fff; border: 1px solid #60a5fa; padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .btn-hdr:active { transform: scale(0.95); }
     .btn-menu { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 6px 10px; border-radius: 8px; font-size: 18px; line-height: 1; cursor: pointer; }
     .btn-menu:active { transform: scale(0.95); }
@@ -359,7 +362,7 @@
     </div>
   </div>
 
-  <!-- Header -->
+  <!-- Header (ईमेल बटण काढले आहे) -->
   <header>
     <div style="display: flex; align-items: center; gap: 10px;">
       <button type="button" onclick="openFilterDrawer()" class="btn-menu" title="मेनू आणि विभाग">☰</button>
@@ -370,10 +373,9 @@
         </p>
       </div>
     </div>
-    <div style="display: flex; gap: 5px;">
-      <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr">🔄</button>
-      <button type="button" id="btnEmailReport" onclick="sendReportToEmail()" class="btn-hdr" title="ईमेलवर रिपोर्ट पाठवा">📧 ईमेल</button>
-      <button type="button" onclick="downloadExcelReport()" class="btn-hdr" style="background: #059669; border-color: #34d399;" title="Excel रिपोर्ट डाउनलोड करा">📥 Excel</button>
+    <div style="display: flex; gap: 6px;">
+      <button type="button" id="btnRefresh" onclick="refreshApp()" class="btn-hdr" title="रिफ्रेश करा">🔄</button>
+      <button type="button" onclick="downloadExcelReport()" class="btn-hdr" style="background: #059669; border-color: #34d399;" title="Excel (.xlsx) डाउनलोड करा">📥 Excel</button>
       <button type="button" onclick="logoutUser()" class="btn-hdr" style="background: #1e3a8a;" title="लॉगआउट">🚪</button>
     </div>
   </header>
@@ -579,7 +581,6 @@
         <button type="button" onclick="switchView('budget')" style="background: #fff; border: 1px solid #4f46e5; color: #4338ca; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: bold; cursor: pointer;">← बजेटवर जा</button>
       </div>
 
-      <!-- एकूण गुंतवणूक सारांश बॅनर -->
       <div class="inv-banner">
         <div>
           <p style="font-size: 11px; color: #c7d2fe; font-weight: 600;">📈 एकूण शिल्लक गुंतवणूक (Net Invested)</p>
@@ -597,13 +598,11 @@
         </div>
       </div>
 
-      <!-- फंड / शेअरनुसार स्वतंत्र यादी -->
       <div>
         <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">फंड / शेअरनुसार तपशील (Fund / Share-wise)</h3>
         <div id="invFundWiseList" style="display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
 
-      <!-- सर्व गुंतवणूक व्यवहारांचा इतिहास -->
       <div>
         <h3 style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">गुंतवणूक व्यवहार इतिहास</h3>
         <div id="invHistoryList"></div>
@@ -638,7 +637,6 @@
     let isSyncing = false;
 
     // ==================== फंड / शेअरचे नाव वेगळे करणे व सुचवणे ====================
-    // जर नोट्समध्ये "[FundName] टीप" अशा फॉरमॅटमध्ये सेव्ह केले असेल तर त्यातून फंडचे नाव काढणे
     function extractFundInfo(t) {
       const raw = (t.notes || '').trim();
       const match = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
@@ -1335,29 +1333,6 @@
         btn.innerText = '🔄';
         btn.disabled = false;
       }, 600);
-    }
-
-    async function sendReportToEmail() {
-      if (!navigator.onLine) {
-        alert("ईमेल पाठवण्यासाठी इंटरनेट चालू असणे आवश्यक आहे!");
-        return;
-      }
-      if (!confirm(`तुमचा संपूर्ण हिशोब रिपोर्ट '${currentUserEmail}' या ईमेलवर पाठवायचा का?`)) return;
-
-      const btn = document.getElementById('btnEmailReport');
-      btn.innerText = '⏳...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(`${SCRIPT_URL}?action=email_report&user_id=${encodeURIComponent(currentUserEmail)}`);
-        const json = await res.json();
-        alert(json.message);
-      } catch (e) {
-        alert("ईमेल पाठवताना त्रुटी आली. पुन्हा प्रयत्न करा.");
-      } finally {
-        btn.innerText = '📧 ईमेल';
-        btn.disabled = false;
-      }
     }
 
     function setSyncBadge(state) {
@@ -2248,9 +2223,12 @@
       }).join('');
     }
 
-    // ==================== Excel (.xls) रिपोर्ट डाउनलोड करणे ====================
+    // ==================== खरी Excel (.xlsx) फाईल तयार करून डाउनलोड करणे (Android WebView Compatible) ====================
     function downloadExcelReport() {
-      if (transactions.length === 0) { alert("नोंद उपलब्ध नाही!"); return; }
+      if (transactions.length === 0) {
+        alert("डाउनलोड करण्यासाठी कोणतीही नोंद उपलब्ध नाही!");
+        return;
+      }
 
       const typeMap = {
         expense: "खर्च (Expense)",
@@ -2262,76 +2240,81 @@
         udhar_take: "उधार घेतले (देणे)"
       };
 
-      let tableRows = transactions.map((t, index) => {
+      const todayStr = getLocalDateString(new Date());
+      const fileName = `Majhe_Budget_${todayStr}.xlsx`;
+
+      // १. जर SheetJS लायब्ररी लोड झाली असेल तर खरी .xlsx फाईल तयार करणे (Data URI द्वारे जेणेकरून Save As रिकामा येणार नाही)
+      if (typeof XLSX !== 'undefined') {
+        const rows = transactions.map((t, idx) => {
+          const cleanMode = getCleanCardName(t.mode);
+          let fundOrPerson = "-";
+          let cleanNote = (t.notes || "").replace(/\n/g, " | ");
+
+          if (t.type === 'saving' || t.type === 'withdraw') {
+            const info = extractFundInfo(t);
+            fundOrPerson = info.fundName;
+            cleanNote = info.cleanNote;
+          } else if (t.type === 'udhar_give' || t.type === 'udhar_take' || t.type === 'cc_bill') {
+            fundOrPerson = t.category;
+          }
+
+          return {
+            "अ.क्र.": idx + 1,
+            "तारीख (Date)": t.date,
+            "प्रकार (Type)": typeMap[t.type] || t.type,
+            "फंड / शेअर / व्यक्ती / कार्ड": fundOrPerson,
+            "वर्गवारी (Category)": t.category,
+            "रक्कम (₹)": Number(t.amount) || 0,
+            "माध्यम / स्थिती": cleanMode,
+            "तपशील / टीप": cleanNote
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 7 }, { wch: 13 }, { wch: 24 }, { wch: 24 },
+          { wch: 20 }, { wch: 13 }, { wch: 18 }, { wch: 30 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Budget_Report");
+
+        // Android WebView साठी base64 data URI वापरणे आवश्यक असते (blob: चालत नाही)
+        const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        const dataUri = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Data;
+
+        const a = document.createElement('a');
+        a.href = dataUri;
+        a.setAttribute('download', fileName);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
+
+      // २. जर ऑफलाइन असताना लायब्ररी लोड नसेल, तर बॅकअप म्हणून UTF-8 CSV Data URI ने डाउनलोड करणे
+      let csv = "\uFEFFअ.क्र.,तारीख,प्रकार,फंड_किंवा_व्यक्ती,वर्गवारी,रक्कम,माध्यम,टीप\n";
+      transactions.forEach((t, idx) => {
         const cleanMode = getCleanCardName(t.mode);
         let fundOrPerson = "-";
-        let cleanNote = (t.notes || "").replace(/\n/g, " | ");
-
+        let cleanNote = (t.notes || "").replace(/\n/g, " | ").replace(/"/g, '""');
         if (t.type === 'saving' || t.type === 'withdraw') {
           const info = extractFundInfo(t);
           fundOrPerson = info.fundName;
-          cleanNote = info.cleanNote;
-        } else if (t.type === 'udhar_give' || t.type === 'udhar_take') {
-          fundOrPerson = t.category;
-        } else if (t.type === 'cc_bill') {
+          cleanNote = info.cleanNote.replace(/"/g, '""');
+        } else if (t.type === 'udhar_give' || t.type === 'udhar_take' || t.type === 'cc_bill') {
           fundOrPerson = t.category;
         }
+        csv += `"${idx + 1}","${t.date}","${typeMap[t.type] || t.type}","${fundOrPerson}","${t.category}","${t.amount}","${cleanMode}","${cleanNote}"\n`;
+      });
 
-        const esc = (str) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-        return `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${esc(t.date)}</td>
-            <td>${esc(typeMap[t.type] || t.type)}</td>
-            <td>${esc(fundOrPerson)}</td>
-            <td>${esc(t.category)}</td>
-            <td style="font-weight:bold;">${Number(t.amount) || 0}</td>
-            <td>${esc(cleanMode)}</td>
-            <td>${esc(cleanNote)}</td>
-          </tr>
-        `;
-      }).join('');
-
-      const excelHtml = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
-            th { background-color: #2563eb; color: #ffffff; font-weight: bold; border: 1px solid #1e40af; padding: 8px; text-align: left; }
-            td { border: 1px solid #cbd5e1; padding: 6px 8px; }
-          </style>
-        </head>
-        <body>
-          <h3>माझे बजेट - संपूर्ण आर्थिक अहवाल (${currentUserName || currentUserEmail})</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>अ.क्र.</th>
-                <th>तारीख (Date)</th>
-                <th>व्यवहाराचा प्रकार (Type)</th>
-                <th>फंड / शेअर / व्यक्ती / कार्ड</th>
-                <th>वर्गवारी (Category)</th>
-                <th>रक्कम (₹)</th>
-                <th>माध्यम / स्थिती</th>
-                <th>तपशील / टीप</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
-        </body>
-        </html>
-      `;
-
-      const blob = new Blob(['\ufeff' + excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+      const csvDataUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const todayStr = getLocalDateString(new Date());
-      a.download = `Majhe_Budget_Report_${todayStr}.xls`;
+      a.href = csvDataUri;
+      a.setAttribute('download', `Majhe_Budget_${todayStr}.csv`);
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     }
 
     window.addEventListener('online', fetchDataFromSheet);
