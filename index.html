@@ -22,6 +22,8 @@
     .btn-menu:active { transform: scale(0.95); }
     .main-wrap { max-width: 480px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: #fff; border-radius: 14px; padding: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .stat-btn-card { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .stat-btn-card:active { transform: scale(0.97); box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; }
@@ -47,7 +49,9 @@
     .tx-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); margin-bottom: 8px; }
     .tx-notes { font-size: 14px; font-weight: bold; color: #0f172a; }
     .tx-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
-    .tx-del { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px 6px; color: #94a3b8; }
+    .tx-edit { background: transparent; border: none; font-size: 15px; cursor: pointer; padding: 4px 5px; color: #64748b; }
+    .tx-edit:hover { color: #2563eb; }
+    .tx-del { background: transparent; border: none; font-size: 15px; cursor: pointer; padding: 4px 5px; color: #94a3b8; }
     .tx-del:hover { color: #ef4444; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.88); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 14px; }
@@ -173,6 +177,87 @@
       </select>
     </div>
   </aside>
+
+  <!-- एडिट करण्यासाठी पासवर्ड विचारणारा सुरक्षा बॉक्स -->
+  <div id="editAuthModal" class="modal-overlay" style="display: none; z-index: 108;" onclick="if(event.target===this) closeEditAuthModal()">
+    <div class="card" style="width: 100%; max-width: 340px; text-align: center; padding: 20px;">
+      <div style="font-size: 32px; margin-bottom: 6px;">🔐</div>
+      <h3 style="font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 6px;">नोंद एडिट करण्यासाठी पासवर्ड टाका</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">सुरक्षिततेसाठी तुमचा लॉगिन पासवर्ड प्रविष्ट करा.</p>
+      <input type="password" id="editConfirmPass" placeholder="तुमचा पासवर्ड टाका" style="text-align: center; margin-bottom: 14px;" onkeydown="if(event.key==='Enter') confirmEditWithPassword()">
+      <div class="grid-2">
+        <button type="button" onclick="closeEditAuthModal()" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">रद्द करा</button>
+        <button type="button" onclick="confirmEditWithPassword()" style="padding: 10px; border-radius: 9px; border: none; background: #2563eb; font-weight: bold; color: #fff; cursor: pointer;">पुढे जा (Edit)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- नोंद दुरुस्त (Edit) करण्यासाठी पॉप-अप -->
+  <div id="editTxModal" class="modal-overlay" style="display: none; z-index: 110;" onclick="if(event.target===this) closeEditTxModal()">
+    <div class="card" style="width: 100%; max-width: 390px; padding: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px;">
+        <h3 style="font-size: 16px; font-weight: bold; color: #0f172a;">✏️ नोंद दुरुस्त करा (Edit)</h3>
+        <button type="button" onclick="closeEditTxModal()" style="background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 9px; font-size: 13px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
+      </div>
+
+      <div id="editFundNameWrap" class="form-group" style="display: none; background: #eef2ff; padding: 8px; border-radius: 9px; border: 1px solid #c7d2fe;">
+        <label class="lbl-text" style="color: #4338ca; display: block; margin-bottom: 4px;">📈 फंड / शेअर / योजनेचे नाव *</label>
+        <input type="text" id="editFundNameInput" list="savedFundsList">
+      </div>
+
+      <div class="grid-2 form-group">
+        <div>
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">रक्कम (₹) *</label>
+          <input type="number" id="editAmountInput" style="font-weight: bold; font-size: 16px; border-color: #2563eb;">
+        </div>
+        <div>
+          <label id="editCategoryLabel" class="lbl-text" style="display: block; margin-bottom: 4px;">वर्गवारी *</label>
+          <select id="editCategorySelect"></select>
+        </div>
+      </div>
+
+      <div class="grid-2 form-group">
+        <div>
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">माध्यम *</label>
+          <select id="editModeSelect"></select>
+        </div>
+        <div>
+          <label class="lbl-text" style="display: block; margin-bottom: 4px;">तारीख *</label>
+          <input type="date" id="editDateInput">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="lbl-text" style="display: block; margin-bottom: 4px;">तपशील / टीप</label>
+        <input type="text" id="editNoteInput" placeholder="तपशील प्रविष्ट करा">
+      </div>
+
+      <div class="grid-2">
+        <button type="button" onclick="closeEditTxModal()" style="padding: 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #475569; cursor: pointer;">रद्द करा</button>
+        <button type="button" onclick="saveEditedTransaction()" style="padding: 10px; border-radius: 9px; border: none; background: #2563eb; font-weight: bold; color: #fff; cursor: pointer;">बदल सेव्ह करा</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- प्रकारानुसार इतिहास दाखवणारा पॉप-अप (कमाई / खर्च / शिल्लक क्लिक केल्यावर) -->
+  <div id="categoryHistoryModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeCategoryHistoryModal()">
+    <div class="card" style="width: 100%; max-width: 420px; max-height: 82vh; display: flex; flex-direction: column; padding: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 8px;">
+        <div>
+          <h3 id="catModalTitle" style="font-size: 16px; font-weight: bold; color: #0f172a;">इतिहास</h3>
+          <p id="catModalSubDate" style="font-size: 10px; color: #64748b; margin-top: 2px;">निवडलेला कालावधी</p>
+        </div>
+        <button type="button" onclick="closeCategoryHistoryModal()" style="background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: bold; color: #475569; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="background: #f8fafc; padding: 8px 12px; border-radius: 9px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold;">
+        <span style="color: #475569;">एकूण रक्कम:</span>
+        <span id="catModalTotalVal" style="font-size: 16px; font-weight: 900;">₹0</span>
+      </div>
+
+      <div id="catModalList" style="overflow-y: auto; flex: 1; padding-right: 2px;"></div>
+    </div>
+  </div>
 
   <!-- नवीन क्रेडिट कार्ड जोडण्यासाठी पॉप-अप -->
   <div id="manageCardsModal" class="modal-overlay" style="display: none;">
@@ -465,30 +550,26 @@
 
       <!-- हिशोब कार्ड्स -->
       <div class="grid-2">
-        <div class="card">
-          <p class="lbl-text">शिल्लक (Balance)</p>
+        <div class="card stat-btn-card" onclick="openCategoryHistoryModal('all')" title="सर्व व्यवहारांचा इतिहास पाहण्यासाठी क्लिक करा">
+          <p class="lbl-text">शिल्लक (Balance) ›</p>
           <p id="totalBalance" class="val-text" style="color: #2563eb;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण रोख/बँक: <strong id="lifetimeBalanceText" style="color: #0f172a;">₹0</strong></p>
         </div>
-        <div class="card" style="cursor: pointer;" onclick="switchView('investment')" title="फंडनुसार गुंतवणूक व नफा-तोटा पाहण्यासाठी क्लिक करा">
+        <div class="card stat-btn-card" onclick="switchView('investment')" title="फंडनुसार गुंतवणूक व नफा-तोटा पाहण्यासाठी क्लिक करा">
           <p class="lbl-text">गुंतवणूक (Savings) ›</p>
           <p id="totalSavings" class="val-text" style="color: #4f46e5;">₹0</p>
           <p style="font-size: 10px; color: #64748b; margin-top: 3px;">एकूण गुंतवणूक: <strong id="lifetimeSavingsText" style="color: #0f172a;">₹0</strong></p>
         </div>
-        <div class="card">
-          <p class="lbl-text">कमाई (Income)</p>
+        <div class="card stat-btn-card" onclick="openCategoryHistoryModal('income')" title="सर्व जमा झालेले व्यवहार पाहण्यासाठी क्लिक करा">
+          <p class="lbl-text">कमाई (Income) ›</p>
           <p id="totalIncome" class="val-text" style="color: #10b981; font-size: 16px;">₹0</p>
+          <p style="font-size: 10px; color: #10b981; margin-top: 2px;">जमा यादी पहा</p>
         </div>
-        <div class="card">
-          <p class="lbl-text">झालेला खर्च (Expense)</p>
+        <div class="card stat-btn-card" onclick="openCategoryHistoryModal('expense')" title="सर्व खर्चाचे व्यवहार पाहण्यासाठी क्लिक करा">
+          <p class="lbl-text">झालेला खर्च (Expense) ›</p>
           <p id="totalExpense" class="val-text" style="color: #ef4444; font-size: 16px;">₹0</p>
+          <p style="font-size: 10px; color: #ef4444; margin-top: 2px;">खर्च यादी पहा</p>
         </div>
-      </div>
-
-      <!-- इतिहास -->
-      <div>
-        <h2 id="historyTitle" style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">चालू महिन्याचा इतिहास</h2>
-        <div id="txList"></div>
       </div>
     </div>
 
@@ -632,7 +713,6 @@
         <div id="invHistoryList"></div>
       </div>
     </div>
-
     <!-- ==================== विभाग ५: सविस्तर रिपोर्ट व प्रिंट (REPORT / STATEMENT SECTION) ==================== -->
     <div id="reportSection" style="display: none; flex-direction: column; gap: 12px;">
       <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 10px;">
@@ -715,6 +795,9 @@
     let selectedUdharType = 'udhar_give';
     let udharPillFilter = 'pending';
     let authMode = 'login';
+    let activeCategoryModalType = null;
+    let pendingEditId = null;
+    let pendingEditAuthId = null;
 
     let currentUserEmail = localStorage.getItem('budget_user_email') || '';
     let currentUserName = localStorage.getItem('budget_user_name') || '';
@@ -899,11 +982,12 @@
               <p class="tx-notes">📈 ${info.fundName}</p>
               <p class="tx-sub">${t.date} • ${t.category} • ${t.mode}${info.cleanNote !== info.fundName ? ' • ' + info.cleanNote : ''}</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; font-weight: bold; color: ${badgeColor};">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-size: 13px; font-weight: bold; color: ${badgeColor}; margin-right: 2px;">
                 ${sign}₹${t.amount.toLocaleString('en-IN')}
               </span>
-              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
+              <button type="button" class="tx-edit" onclick="requestEditTransaction('${t.id}')" title="दुरुस्त करा">✏️</button>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')" title="हटवा">🗑️</button>
             </div>
           </div>
         `;
@@ -1197,11 +1281,12 @@
               <p class="tx-notes">${t.notes}</p>
               <p class="tx-sub">${t.date} • <strong>💳 ${cardNm}</strong> • ${subInfo}</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; font-weight: bold; color: ${badgeColor};">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-size: 13px; font-weight: bold; color: ${badgeColor}; margin-right: 2px;">
                 ${sign}₹${t.amount.toLocaleString('en-IN')}
               </span>
-              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
+              <button type="button" class="tx-edit" onclick="requestEditTransaction('${t.id}')" title="दुरुस्त करा">✏️</button>
+              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')" title="हटवा">🗑️</button>
             </div>
           </div>
         `;
@@ -1534,7 +1619,6 @@
       document.body.removeChild(ta);
       alert("✅ संपूर्ण रिपोर्ट कॉपी झाला आहे! आता तुम्ही WhatsApp वर पेस्ट करू शकता.");
     }
-
     // ==================== नवीन उधारी खाते फॉर्म उघडणे व बंद करणे ====================
     function openNewUdharForm() {
       document.getElementById('btnToggleUdharForm').style.display = 'none';
@@ -1607,6 +1691,9 @@
         generateCustomReport();
       } else {
         renderTransactions();
+      }
+      if (activeCategoryModalType && document.getElementById('categoryHistoryModal').style.display === 'flex') {
+        openCategoryHistoryModal(activeCategoryModalType);
       }
     }
 
@@ -1967,6 +2054,192 @@
       e.target.reset();
       document.getElementById('transDate').value = getLocalDateString(new Date());
       setType(selectedType);
+
+      if (navigator.onLine) {
+        triggerSync();
+      } else {
+        setSyncBadge('offline');
+      }
+    }
+
+    // ==================== पासवर्ड तपासणीसह नोंद दुरुस्त (EDIT) करणे ====================
+    function requestEditTransaction(id) {
+      pendingEditAuthId = id;
+      document.getElementById('editConfirmPass').value = '';
+      document.getElementById('editAuthModal').style.display = 'flex';
+      setTimeout(() => document.getElementById('editConfirmPass').focus(), 100);
+    }
+
+    function closeEditAuthModal() {
+      pendingEditAuthId = null;
+      document.getElementById('editConfirmPass').value = '';
+      document.getElementById('editAuthModal').style.display = 'none';
+    }
+
+    async function confirmEditWithPassword() {
+      if (!pendingEditAuthId) return;
+      const enteredPass = document.getElementById('editConfirmPass').value.trim();
+
+      if (!enteredPass) {
+        alert("कृपया पासवर्ड प्रविष्ट करा!");
+        return;
+      }
+
+      if (currentUserPass) {
+        if (enteredPass !== currentUserPass) {
+          alert("❌ चुकीचा पासवर्ड! नोंद एडिट करता येणार नाही.");
+          document.getElementById('editConfirmPass').value = '';
+          return;
+        }
+      } else {
+        if (!navigator.onLine) {
+          alert("पासवर्ड तपासण्यासाठी इंटरनेट आवश्यक आहे.");
+          return;
+        }
+        try {
+          const res = await fetch(`${SCRIPT_URL}?action=login&email=${encodeURIComponent(currentUserEmail)}&password=${encodeURIComponent(enteredPass)}`);
+          const json = await res.json();
+          if (json.status !== "success") {
+            alert("❌ चुकीचा पासवर्ड! नोंद एडिट करता येणार नाही.");
+            document.getElementById('editConfirmPass').value = '';
+            return;
+          }
+          currentUserPass = enteredPass;
+          localStorage.setItem('budget_user_pass', currentUserPass);
+        } catch (e) {
+          alert("पासवर्ड तपासता आला नाही. इंटरनेट तपासा!");
+          return;
+        }
+      }
+
+      const idToEdit = pendingEditAuthId;
+      closeEditAuthModal();
+      openEditTxModal(idToEdit);
+    }
+
+    function openEditTxModal(id) {
+      const tx = transactions.find(t => t.id === id);
+      if (!tx) return;
+
+      pendingEditId = id;
+      const isSav = isInvestmentType(tx.type);
+      const fundWrap = document.getElementById('editFundNameWrap');
+      const fundInput = document.getElementById('editFundNameInput');
+      const catLabel = document.getElementById('editCategoryLabel');
+      const catSel = document.getElementById('editCategorySelect');
+      const modeSel = document.getElementById('editModeSelect');
+      const noteInput = document.getElementById('editNoteInput');
+
+      document.getElementById('editAmountInput').value = tx.amount;
+      document.getElementById('editDateInput').value = tx.date;
+
+      if (isSav) {
+        fundWrap.style.display = 'block';
+        const info = extractFundInfo(tx);
+        fundInput.value = info.fundName;
+        noteInput.value = (info.cleanNote === info.fundName) ? '' : info.cleanNote;
+      } else {
+        fundWrap.style.display = 'none';
+        fundInput.value = '';
+        noteInput.value = tx.notes || '';
+      }
+
+      if (tx.type === 'cc_bill') {
+        catLabel.innerText = 'क्रेडिट कार्ड *';
+        const allCards = Array.from(new Set([...creditCards, tx.category || 'Credit Card']));
+        catSel.innerHTML = allCards.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSel.value = tx.category || 'Credit Card';
+      } else {
+        catLabel.innerText = 'वर्गवारी *';
+        let cats = expenseCategories;
+        if (tx.type === 'income') cats = incomeCategories;
+        else if (isSav) cats = savingCategories;
+        const catList = Array.from(new Set([...cats, tx.category]));
+        catSel.innerHTML = catList.map(c => `<option value="${c}">${c}</option>`).join('');
+        catSel.value = tx.category;
+      }
+
+      let modeHtml = `
+        <option value="UPI">UPI / GPay</option>
+        <option value="Cash">रोख (Cash)</option>
+      `;
+      if (tx.type === 'expense') {
+        const allCC = Array.from(new Set([...creditCards, getCleanCardName(tx.mode)]));
+        allCC.forEach(card => {
+          const val = (card === 'Credit Card') ? 'Credit Card' : `CC:${card}`;
+          modeHtml += `<option value="${val}">💳 ${card}</option>`;
+        });
+      }
+      modeSel.innerHTML = modeHtml;
+      if (Array.from(modeSel.options).some(o => o.value === tx.mode)) {
+        modeSel.value = tx.mode;
+      } else {
+        modeSel.innerHTML += `<option value="${tx.mode}">${tx.mode}</option>`;
+        modeSel.value = tx.mode;
+      }
+
+      document.getElementById('editTxModal').style.display = 'flex';
+      setTimeout(() => document.getElementById('editAmountInput').focus(), 100);
+    }
+
+    function closeEditTxModal() {
+      pendingEditId = null;
+      document.getElementById('editTxModal').style.display = 'none';
+    }
+
+    function saveEditedTransaction() {
+      if (!pendingEditId) return;
+      const idx = transactions.findIndex(t => t.id === pendingEditId);
+      if (idx === -1) return;
+
+      const oldTx = transactions[idx];
+      const newAmt = parseFloat(document.getElementById('editAmountInput').value);
+      const newCat = document.getElementById('editCategorySelect').value;
+      const newMode = document.getElementById('editModeSelect').value;
+      const newDate = document.getElementById('editDateInput').value;
+      const rawNote = document.getElementById('editNoteInput').value.trim();
+      const isSav = isInvestmentType(oldTx.type);
+      const fundName = document.getElementById('editFundNameInput').value.trim();
+
+      if (isSav && !fundName) {
+        alert("कृपया फंड, शेअर किंवा योजनेचे नाव टाका!");
+        document.getElementById('editFundNameInput').focus();
+        return;
+      }
+      if (!newAmt || newAmt <= 0) {
+        alert("कृपया वैध रक्कम टाका!");
+        return;
+      }
+      if (!newDate) {
+        alert("कृपया तारीख निवडा!");
+        return;
+      }
+
+      let finalNote = rawNote || newCat;
+      if (isSav) {
+        finalNote = rawNote ? `[${fundName}] ${rawNote}` : `[${fundName}]`;
+      }
+
+      const updatedTx = {
+        ...oldTx,
+        amount: newAmt,
+        category: newCat,
+        mode: newMode,
+        date: newDate,
+        notes: finalNote
+      };
+
+      transactions[idx] = updatedTx;
+      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      pendingQueue = pendingQueue.filter(t => t.id !== pendingEditId);
+      deleteQueue.push(pendingEditId);
+      pendingQueue.push(updatedTx);
+
+      saveUserLocalData();
+      updateSavedFundsDatalist();
+      closeEditTxModal();
+      handleSearchInput();
 
       if (navigator.onLine) {
         triggerSync();
@@ -2462,7 +2735,6 @@
               </div>
               <button type="button" class="tx-del" onclick="event.stopPropagation(); deleteTransaction('${t.id}')">🗑️</button>
             </div>
-
             ${splitBoxHtml}
             ${detailsTableHtml}
             ${actionBtns}
@@ -2617,18 +2889,111 @@
       fetchDataFromSheet();
     }
 
-    function renderTransactions() {
+    // ==================== कार्डवर क्लिक केल्यास इतिहास पॉप-अप दाखवणे ====================
+    function openCategoryHistoryModal(catType) {
+      activeCategoryModalType = catType;
       const search = (document.getElementById('searchInput').value || '').toLowerCase();
-      const typeFilter = document.getElementById('typeFilter').value;
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
 
-      const historyTitle = document.getElementById('historyTitle');
-      if (!startDate && !endDate) {
-        historyTitle.innerText = "सर्व नोंदींचा इतिहास (All Time)";
+      const subDateEl = document.getElementById('catModalSubDate');
+      subDateEl.innerText = (!startDate && !endDate)
+        ? "कालावधी: सर्व नोंदी (All Time)"
+        : `कालावधी: ${startDate || 'सुरुवात'} ते ${endDate || 'आज'}`;
+
+      const budgetTx = transactions.filter(t => t.type !== 'udhar_give' && t.type !== 'udhar_take');
+      const dateFiltered = budgetTx.filter(t => {
+        if (startDate && t.date < startDate) return false;
+        if (endDate && t.date > endDate) return false;
+        return true;
+      });
+
+      const listFiltered = dateFiltered.filter(t => {
+        const cleanMode = getCleanCardName(t.mode);
+        const matchSearch = (t.category + t.notes + cleanMode + t.amount).toLowerCase().includes(search);
+        if (!matchSearch) return false;
+        if (catType === 'all') return true;
+        return t.type === catType;
+      });
+
+      const titleEl = document.getElementById('catModalTitle');
+      const totalValEl = document.getElementById('catModalTotalVal');
+      const container = document.getElementById('catModalList');
+
+      let totalSum = 0;
+      listFiltered.forEach(t => { totalSum += t.amount; });
+
+      if (catType === 'income') {
+        titleEl.innerText = '💰 जमा झालेली कमाई यादी';
+        totalValEl.style.color = '#10b981';
+        totalValEl.innerText = `+ ₹${totalSum.toLocaleString('en-IN')}`;
+      } else if (catType === 'expense') {
+        titleEl.innerText = '💸 झालेला खर्च यादी';
+        totalValEl.style.color = '#ef4444';
+        totalValEl.innerText = `- ₹${totalSum.toLocaleString('en-IN')}`;
       } else {
-        historyTitle.innerText = `निवडलेल्या काळातील इतिहास (${startDate || 'सुरुवात'} ते ${endDate || 'आज'})`;
+        titleEl.innerText = '📋 सर्व व्यवहार (शिल्लक तपशील)';
+        const balTxt = document.getElementById('totalBalance').innerText;
+        totalValEl.style.color = '#2563eb';
+        totalValEl.innerText = balTxt;
       }
+
+      if (listFiltered.length === 0) {
+        container.innerHTML = `<div style="text-align: center; font-size: 12px; color: #94a3b8; padding: 24px 10px;">या कालावधीत कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
+      } else {
+        container.innerHTML = listFiltered.map(t => {
+          let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
+          let titleText = t.notes;
+
+          if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
+          else if (t.type === 'saving') {
+            badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक';
+            const info = extractFundInfo(t);
+            titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
+          }
+          else if (t.type === 'withdraw') {
+            badgeColor = '#d97706'; sign = '↩️ +'; typeBadge = 'अंशतः काढले';
+            const info = extractFundInfo(t);
+            titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
+          }
+          else if (t.type === 'sav_exit') {
+            badgeColor = '#059669'; sign = '🏁 +'; typeBadge = 'पूर्ण काढले';
+            const info = extractFundInfo(t);
+            titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
+          }
+          else if (t.type === 'cc_bill') { badgeColor = '#0284c7'; sign = '💳 -'; typeBadge = 'कार्ड बिल भरणा'; }
+
+          const modeLabel = isCreditCardMode(t.mode) ? `💳 ${getCleanCardName(t.mode)}` : t.mode;
+
+          return `
+            <div class="tx-item">
+              <div>
+                <p class="tx-notes">${titleText}</p>
+                <p class="tx-sub">${t.date} • ${modeLabel} • <strong>${typeBadge}</strong> • ${t.category}</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 14px; font-weight: bold; color: ${badgeColor}; margin-right: 2px;">
+                  ${sign} ₹${t.amount.toLocaleString('en-IN')}
+                </span>
+                <button type="button" class="tx-edit" onclick="requestEditTransaction('${t.id}')" title="दुरुस्त करा">✏️</button>
+                <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')" title="हटवा">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('categoryHistoryModal').style.display = 'flex';
+    }
+
+    function closeCategoryHistoryModal() {
+      activeCategoryModalType = null;
+      document.getElementById('categoryHistoryModal').style.display = 'none';
+    }
+
+    function renderTransactions() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
 
       const budgetTx = transactions.filter(t => t.type !== 'udhar_give' && t.type !== 'udhar_take');
 
@@ -2681,59 +3046,6 @@
 
       document.getElementById('totalIncome').innerText = `₹${rangeIncome.toLocaleString('en-IN')}`;
       document.getElementById('totalExpense').innerText = `₹${rangeTotalExpense.toLocaleString('en-IN')}`;
-
-      const listFiltered = dateFiltered.filter(t => {
-        const cleanMode = getCleanCardName(t.mode);
-        const matchSearch = (t.category + t.notes + cleanMode + t.amount).toLowerCase().includes(search);
-        const matchType = typeFilter === 'all' || t.type === typeFilter || (typeFilter === 'withdraw' && t.type === 'sav_exit');
-        return matchSearch && matchType;
-      });
-
-      const container = document.getElementById('txList');
-      if (listFiltered.length === 0) {
-        container.innerHTML = `<div class="card" style="text-align: center; font-size: 12px; color: #94a3b8;">या कालावधीत कोणत्याही नोंदी आढळल्या नाहीत.</div>`;
-        return;
-      }
-
-      container.innerHTML = listFiltered.map(t => {
-        let badgeColor = '#ef4444', sign = '-', typeBadge = 'खर्च';
-        let titleText = t.notes;
-
-        if (t.type === 'income') { badgeColor = '#10b981'; sign = '+'; typeBadge = 'जमा'; }
-        else if (t.type === 'saving') {
-          badgeColor = '#4f46e5'; sign = '💼 '; typeBadge = 'गुंतवणूक';
-          const info = extractFundInfo(t);
-          titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
-        }
-        else if (t.type === 'withdraw') {
-          badgeColor = '#d97706'; sign = '↩️ +'; typeBadge = 'अंशतः काढले';
-          const info = extractFundInfo(t);
-          titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
-        }
-        else if (t.type === 'sav_exit') {
-          badgeColor = '#059669'; sign = '🏁 +'; typeBadge = 'पूर्ण काढले';
-          const info = extractFundInfo(t);
-          titleText = `${info.fundName}${info.cleanNote !== info.fundName ? ' - ' + info.cleanNote : ''}`;
-        }
-        else if (t.type === 'cc_bill') { badgeColor = '#0284c7'; sign = '💳 -'; typeBadge = 'कार्ड बिल भरणा'; }
-
-        const modeLabel = isCreditCardMode(t.mode) ? `💳 ${getCleanCardName(t.mode)}` : t.mode;
-
-        return `
-          <div class="tx-item">
-            <div>
-              <p class="tx-notes">${titleText}</p>
-              <p class="tx-sub">${t.date} • ${modeLabel} • <strong>${typeBadge}</strong> • ${t.category}</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 14px; font-weight: bold; color: ${badgeColor};">
-                ${sign} ₹${t.amount.toLocaleString('en-IN')}
-              </span>
-              <button type="button" class="tx-del" onclick="deleteTransaction('${t.id}')">🗑️</button>
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
     window.addEventListener('online', fetchDataFromSheet);
